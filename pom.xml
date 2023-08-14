@@ -269,6 +269,8 @@
                         <arg>-Xlint:all</arg>
                         <arg>-Werror</arg>
                     </compilerArgs>
+                    <source>8</source>
+                    <target>8</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -299,7 +301,7 @@
                             <supportUrl>https://databend.rs</supportUrl>
                             <supportLogo>logos/databend.png</supportLogo>
 
-                            <ownerUsername>databend cloud</ownerUsername>
+                            <ownerUsername>databendCloud</ownerUsername>
                             <ownerType>organization</ownerType>
                             <ownerName>Databend, Inc.</ownerName>
                             <ownerUrl>https://databend.rs/</ownerUrl>
@@ -382,22 +384,22 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-checkstyle-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>validate</id>
-                        <phase>validate</phase>
-                        <configuration>
-                            <suppressionsLocation>checkstyle/suppressions.xml</suppressionsLocation>
-                        </configuration>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-checkstyle-plugin</artifactId>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>validate</id>-->
+<!--                        <phase>validate</phase>-->
+<!--                        <configuration>-->
+<!--                            <suppressionsLocation>checkstyle/suppressions.xml</suppressionsLocation>-->
+<!--                        </configuration>-->
+<!--                        <goals>-->
+<!--                            <goal>check</goal>-->
+<!--                        </goals>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>

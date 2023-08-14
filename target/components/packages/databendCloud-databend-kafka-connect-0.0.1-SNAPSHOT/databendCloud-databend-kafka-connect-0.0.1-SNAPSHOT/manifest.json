@@ -1,0 +1,35 @@
+{
+  "name" : "databend-kafka-connect",
+  "version" : "0.0.1-SNAPSHOT",
+  "title" : "Databend Kafka Connect",
+  "description" : "The Databend sink connectors allow you to consume data from kafka and write into Databend table.\n\nThe Databend sink connector allows you to export data from Kafka topics to Databend\ndatabase. The connector polls data from Kafka to write to the database based on the\ntopics subscription. It is possible to achieve idempotent writes with upserts.\nAuto-creation of tables, and limited auto-evolution is also supported.",
+  "owner" : {
+    "username" : "databendCloud",
+    "type" : "organization",
+    "name" : "Databend, Inc.",
+    "url" : "https://databend.rs/",
+    "logo" : "assets/databend.png"
+  },
+  "support" : {
+    "summary" : "Databend Community",
+    "url" : "https://databend.rs",
+    "logo" : "assets/databend.png",
+    "provider_name" : "Databend, Inc."
+  },
+  "tags" : [ "database", "rdbms", "postgresql", "dbms", "databend", "mysql", "databend-jdbc" ],
+  "features" : {
+    "supported_encodings" : [ "any" ],
+    "single_message_transforms" : true,
+    "confluent_control_center_integration" : false,
+    "kafka_connect_api" : true
+  },
+  "logo" : "assets/databend.jpg",
+  "documentation_url" : "https://databend.rs",
+  "docker_image" : { },
+  "license" : [ {
+    "name" : "Apache License",
+    "url" : "https://www.apache.org/licenses/LICENSE-2.0"
+  } ],
+  "component_types" : [ "sink" ],
+  "release_date" : "2023-08-14"
+}

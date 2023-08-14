@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<checkstyle version="9.3">
+<file name="/Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/DatabendSinkConnector.java">
+<error line="1" severity="error" message="文件未以空行结尾。" source="com.puppycrawl.tools.checkstyle.checks.NewlineAtEndOfFileCheck"/>
+<error line="1" severity="error" message="缺少 package-info.java 文件。" source="com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocPackageCheck"/>
+<error line="3" column="8" severity="error" message="无用导入 - java.util.Locale 。" source="com.puppycrawl.tools.checkstyle.checks.imports.UnusedImportsCheck"/>
+<error line="4" column="8" severity="error" message="无用导入 - java.util.Optional 。" source="com.puppycrawl.tools.checkstyle.checks.imports.UnusedImportsCheck"/>
+<error line="5" column="8" severity="error" message="无用导入 - org.apache.kafka.common.config.Config 。" source="com.puppycrawl.tools.checkstyle.checks.imports.UnusedImportsCheck"/>
+<error line="6" column="8" severity="error" message="无用导入 - org.apache.kafka.common.config.ConfigDef 。" source="com.puppycrawl.tools.checkstyle.checks.imports.UnusedImportsCheck"/>
+<error line="7" column="8" severity="error" message="无用导入 - org.apache.kafka.common.config.ConfigValue 。" source="com.puppycrawl.tools.checkstyle.checks.imports.UnusedImportsCheck"/>
+<error line="8" column="8" severity="error" message="无用导入 - org.apache.kafka.connect.connector.Task 。" source="com.puppycrawl.tools.checkstyle.checks.imports.UnusedImportsCheck"/>
+<error line="12" column="8" severity="error" message="无用导入 - java.util.ArrayList 。" source="com.puppycrawl.tools.checkstyle.checks.imports.UnusedImportsCheck"/>
+<error line="13" column="8" severity="error" message="无用导入 - java.util.List 。" source="com.puppycrawl.tools.checkstyle.checks.imports.UnusedImportsCheck"/>
+<error line="17" severity="error" message="本行字符数 87个，最多：80个。" source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+<error line="17" column="5" severity="error" message="缺少 Javadoc 。" source="com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocVariableCheck"/>
+<error line="17" column="33" severity="error" message="名称 &apos;log&apos; 必须匹配表达式： &apos;^[A-Z][A-Z0-9]*(_[A-Z0-9]+)*$&apos; 。" source="com.puppycrawl.tools.checkstyle.checks.naming.ConstantNameCheck"/>
+<error line="19" column="5" severity="error" message="缺少 Javadoc 。" source="com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocVariableCheck"/>
+</file>
+</checkstyle>
