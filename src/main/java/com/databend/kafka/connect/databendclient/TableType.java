@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 public enum TableType {
 
     TABLE("TABLE", "Table"),
-    PARTITIONED_TABLE("PARTITIONED TABLE", "Partitioned Table"),
     VIEW("VIEW", "View");
 
     private final String value;
@@ -21,10 +20,6 @@ public enum TableType {
 
     public String capitalized() {
         return capitalCase;
-    }
-
-    public String jdbcName() {
-        return value;
     }
 
     @Override
@@ -49,19 +44,5 @@ public enum TableType {
         return EnumSet.copyOf(types);
     }
 
-    public static String asJdbcTableTypeNames(EnumSet<TableType> types, String delim) {
-        return types.stream()
-                .map(TableType::jdbcName)
-                .sorted()
-                .collect(Collectors.joining(delim));
-    }
-
-    public static String[] asJdbcTableTypeArray(EnumSet<TableType> types) {
-        return types.stream()
-                .map(TableType::jdbcName)
-                .sorted()
-                .collect(Collectors.toList())
-                .toArray(new String[types.size()]);
-    }
 
 }

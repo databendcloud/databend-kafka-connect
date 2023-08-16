@@ -1,19 +1,14 @@
 package com.databend.kafka.connect.sink;
 
-import com.databend.kafka.connect.databendclient.TableType;
 import com.databend.kafka.connect.util.DeleteEnabledRecommender;
 import com.databend.kafka.connect.util.QuoteWay;
-import com.databend.kafka.connect.util.StringUtils;
+import com.databend.kafka.connect.databendclient.TableType;
 import com.databend.kafka.connect.util.TimeZoneValidator;
 import org.apache.kafka.common.config.AbstractConfig;
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.ConfigException;
 import org.apache.kafka.common.config.types.Password;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -46,7 +41,7 @@ public class DatabendSinkConfig extends AbstractConfig {
 
     public static final String CONNECTION_URL = CONNECTION_PREFIX + "url";
     private static final String CONNECTION_URL_DOC =
-            "JDBC connection URL.\n"
+            "Databend JDBC connection URL.\n"
                     + "For example: ``jdbc:databend://root:root@localhost:8000``";
     private static final String CONNECTION_URL_DISPLAY = "JDBC URL";
 
@@ -142,6 +137,21 @@ public class DatabendSinkConfig extends AbstractConfig {
                     + "the desired fields.";
     private static final String PK_FIELDS_DISPLAY = "Primary Key Fields";
 
+    public static final String PK_MODE = "pk.mode";
+    private static final String PK_MODE_DEFAULT = "none";
+    private static final String PK_MODE_DOC =
+            "The primary key mode, also refer to ``" + PK_FIELDS + "`` documentation for interplay. "
+                    + "Supported modes are:\n"
+                    + "``none``\n"
+                    + "    No keys utilized.\n"
+                    + "``kafka``\n"
+                    + "    Kafka coordinates are used as the PK.\n"
+                    + "``record_key``\n"
+                    + "    Field(s) from the record key are used, which may be a primitive or a struct.\n"
+                    + "``record_value``\n"
+                    + "    Field(s) from the record value are used, which must be a struct.";
+    private static final String PK_MODE_DISPLAY = "Primary Key Mode";
+
     public static final String FIELDS_WHITELIST = "fields.whitelist";
     private static final String FIELDS_WHITELIST_DEFAULT = "";
     private static final String FIELDS_WHITELIST_DOC =
@@ -164,9 +174,18 @@ public class DatabendSinkConfig extends AbstractConfig {
     public static final String DB_TIMEZONE_CONFIG = "db.timezone";
     public static final String DB_TIMEZONE_DEFAULT = "UTC";
     private static final String DB_TIMEZONE_CONFIG_DOC =
-            "Name of the JDBC timezone that should be used in the connector when "
+            "Name of the Databend JDBC timezone that should be used in the connector when "
                     + "inserting time-based values. Defaults to UTC.";
     private static final String DB_TIMEZONE_CONFIG_DISPLAY = "DB Time Zone";
+
+    public static final String TABLE_TYPES_CONFIG = "table.types";
+    private static final String TABLE_TYPES_DISPLAY = "Table Types";
+    public static final String TABLE_TYPES_DEFAULT = TableType.TABLE.toString();
+    private static final String TABLE_TYPES_DOC =
+            "The comma-separated types of database tables to which the sink connector can write. "
+                    + "By default this is ``" + TableType.TABLE + "``, but any combination of ``"
+                    + TableType.TABLE + "``, `` and ``"
+                    + TableType.VIEW + "`` is allowed.";
 
     public static final String QUOTE_SQL_IDENTIFIERS_CONFIG = "quote.sql.identifiers";
     public static final String QUOTE_SQL_IDENTIFIERS_DEFAULT = QuoteWay.ALWAYS.name().toString();
@@ -177,6 +196,24 @@ public class DatabendSinkConfig extends AbstractConfig {
 
     public static final String TRIM_SENSITIVE_LOG_ENABLED = "trim.sensitive.log";
     private static final String TRIM_SENSITIVE_LOG_ENABLED_DEFAULT = "false";
+
+    public static final String DATABASE_CONFIG = "database";
+    private static final String DATABASE_DOC =
+            "Database  to fetch table metadata from the database.\n"
+                    + "   null indicates that the schema name is not used to narrow the search and "
+                    + "that all table metadata is fetched, regardless of the schema.";
+    private static final String DATABASE_DISPLAY = "database name";
+    public static final String DATABASE_DEFAULT = "default";
+
+    public static final String CATALOG_PATTERN_CONFIG = "catalog.pattern";
+    private static final String CATALOG_PATTERN_DOC =
+            "Catalog pattern to fetch table metadata from the database.\n"
+                    + "  * ``\"\"`` retrieves those without a catalog \n"
+                    + "  * null (default) indicates that the schema name is not used to narrow the search and "
+                    + "that all table metadata is fetched, regardless of the catalog.";
+    private static final String CATALOG_PATTERN_DISPLAY = "Schema pattern";
+    public static final String CATALOG_PATTERN_DEFAULT = "default";
+    public static final String BATCH_MAX_ROWS_CONFIG = "batch.max.rows";
 
     public static final ConfigDef CONFIG_DEF = new ConfigDef()
             // Connection
@@ -382,13 +419,16 @@ public class DatabendSinkConfig extends AbstractConfig {
     public final boolean autoEvolve;
     public final InsertMode insertMode;
     public final List<String> pkFields;
+    public final PrimaryKeyMode pkMode;
     public final Set<String> fieldsWhitelist;
     public final TimeZone timeZone;
+    public final EnumSet<TableType> tableTypes;
 
     public final boolean trimSensitiveLogsEnabled;
 
     public DatabendSinkConfig(Map<?, ?> props) {
         super(CONFIG_DEF, props);
+        pkMode = PrimaryKeyMode.valueOf(getString(PK_MODE).toUpperCase());
         connectionUrl = getString(CONNECTION_URL);
         connectionUser = getString(CONNECTION_USER);
         connectionPassword = getPasswordValue(CONNECTION_PASSWORD);
@@ -406,6 +446,7 @@ public class DatabendSinkConfig extends AbstractConfig {
         fieldsWhitelist = new HashSet<>(getList(FIELDS_WHITELIST));
         String dbTimeZone = getString(DB_TIMEZONE_CONFIG);
         timeZone = TimeZone.getTimeZone(ZoneId.of(dbTimeZone));
+        tableTypes = TableType.parse(getList(TABLE_TYPES_CONFIG));
         trimSensitiveLogsEnabled = getBoolean(TRIM_SENSITIVE_LOG_ENABLED);
     }
 
@@ -416,7 +457,13 @@ public class DatabendSinkConfig extends AbstractConfig {
         }
         return null;
     }
+    public EnumSet<TableType> tableTypes() {
+        return tableTypes;
+    }
 
+    public Set<String> tableTypeNames() {
+        return tableTypes().stream().map(TableType::toString).collect(Collectors.toSet());
+    }
 
     private static class EnumValidator implements ConfigDef.Validator {
         private final List<String> canonicalValues;
