@@ -454,18 +454,18 @@ public class DatabendClient implements DatabendConnection {
         return Arrays.stream(types).sorted().collect(Collectors.joining(delim));
     }
 
-    @Override
-    public Map<ColumnIdentity, ColumnDefinition> describeColumns(
-            Connection connection,
-            String tablePattern,
-            String columnPattern
-    ) throws SQLException {
-        //if the table pattern is fqn, then just use the actual table name
-        TableIdentity tableId = parseTableIdentifier(tablePattern);
-        String catalog = tableId.catalogName() != null ? tableId.catalogName() : catalogPattern;
-        String schema = tableId.schemaName() != null ? tableId.schemaName() : databaseName;
-        return describeColumns(connection, catalog, schema, tableId.tableName(), columnPattern);
-    }
+//    @Override
+//    public Map<ColumnIdentity, ColumnDefinition> describeColumns(
+//            Connection connection,
+//            String tablePattern,
+//            String columnPattern
+//    ) throws SQLException {
+//        //if the table pattern is fqn, then just use the actual table name
+//        TableIdentity tableId = parseTableIdentifier(tablePattern);
+//        String catalog = tableId.catalogName() != null ? tableId.catalogName() : catalogPattern;
+//        String schema = tableId.schemaName() != null ? tableId.schemaName() : databaseName;
+//        return describeColumns(connection, catalog, schema, tableId.tableName(), columnPattern);
+//    }
 
     @Override
     public Map<ColumnIdentity, ColumnDefinition> describeColumns(
@@ -568,75 +568,75 @@ public class DatabendClient implements DatabendConnection {
         }
     }
 
-    @Override
-    public Map<ColumnIdentity, ColumnDefinition> describeColumns(ResultSetMetaData rsMetadata) throws
-            SQLException {
-        Map<ColumnIdentity, ColumnDefinition> result = new LinkedHashMap<>();
-        for (int i = 1; i <= rsMetadata.getColumnCount(); ++i) {
-            ColumnDefinition defn = describeColumn(rsMetadata, i);
-            result.put(defn.id(), defn);
-        }
-        return result;
-    }
+//    @Override
+//    public Map<ColumnIdentity, ColumnDefinition> describeColumns(ResultSetMetaData rsMetadata) throws
+//            SQLException {
+//        Map<ColumnIdentity, ColumnDefinition> result = new LinkedHashMap<>();
+//        for (int i = 1; i <= rsMetadata.getColumnCount(); ++i) {
+//            ColumnDefinition defn = describeColumn(rsMetadata, i);
+//            result.put(defn.id(), defn);
+//        }
+//        return result;
+//    }
 
-    /**
-     * Create a definition for the specified column in the result set.
-     *
-     * @param rsMetadata the result set metadata; may not be null
-     * @param column     the column number, starting at 1 for the first column
-     * @return the column definition; never null
-     * @throws SQLException if there is an error accessing the result set metadata
-     */
-    protected ColumnDefinition describeColumn(
-            ResultSetMetaData rsMetadata,
-            int column
-    ) throws SQLException {
-        String catalog = rsMetadata.getCatalogName(column);
-        String schema = rsMetadata.getSchemaName(column);
-        String tableName = rsMetadata.getTableName(column);
-        TableIdentity tableId = new TableIdentity(catalog, schema, tableName);
-        String name = rsMetadata.getColumnName(column);
-        String alias = rsMetadata.getColumnLabel(column);
-        ColumnIdentity id = new ColumnIdentity(tableId, name, alias);
-        Nullability nullability;
-        switch (rsMetadata.isNullable(column)) {
-            case ResultSetMetaData.columnNullable:
-                nullability = Nullability.NULL;
-                break;
-            case ResultSetMetaData.columnNoNulls:
-                nullability = Nullability.NOT_NULL;
-                break;
-            case ResultSetMetaData.columnNullableUnknown:
-            default:
-                nullability = Nullability.UNKNOWN;
-                break;
-        }
-        Mutability mutability = Mutability.MAYBE_WRITABLE;
-        if (rsMetadata.isReadOnly(column)) {
-            mutability = Mutability.READ_ONLY;
-        } else if (rsMetadata.isWritable(column)) {
-            mutability = Mutability.MAYBE_WRITABLE;
-        } else if (rsMetadata.isDefinitelyWritable(column)) {
-            mutability = Mutability.WRITABLE;
-        }
-        return new ColumnDefinition(
-                id,
-                rsMetadata.getColumnType(column),
-                rsMetadata.getColumnTypeName(column),
-                rsMetadata.getColumnClassName(column),
-                nullability,
-                mutability,
-                rsMetadata.getPrecision(column),
-                rsMetadata.getScale(column),
-                rsMetadata.isSigned(column),
-                rsMetadata.getColumnDisplaySize(column),
-                rsMetadata.isAutoIncrement(column),
-                rsMetadata.isCaseSensitive(column),
-                rsMetadata.isSearchable(column),
-                rsMetadata.isCurrency(column),
-                false
-        );
-    }
+//    /**
+//     * Create a definition for the specified column in the result set.
+//     *
+//     * @param rsMetadata the result set metadata; may not be null
+//     * @param column     the column number, starting at 1 for the first column
+//     * @return the column definition; never null
+//     * @throws SQLException if there is an error accessing the result set metadata
+//     */
+//    protected ColumnDefinition describeColumn(
+//            ResultSetMetaData rsMetadata,
+//            int column
+//    ) throws SQLException {
+//        String catalog = rsMetadata.getCatalogName(column);
+//        String schema = rsMetadata.getSchemaName(column);
+//        String tableName = rsMetadata.getTableName(column);
+//        TableIdentity tableId = new TableIdentity(catalog, schema, tableName);
+//        String name = rsMetadata.getColumnName(column);
+//        String alias = rsMetadata.getColumnLabel(column);
+//        ColumnIdentity id = new ColumnIdentity(tableId, name, alias);
+//        Nullability nullability;
+//        switch (rsMetadata.isNullable(column)) {
+//            case ResultSetMetaData.columnNullable:
+//                nullability = Nullability.NULL;
+//                break;
+//            case ResultSetMetaData.columnNoNulls:
+//                nullability = Nullability.NOT_NULL;
+//                break;
+//            case ResultSetMetaData.columnNullableUnknown:
+//            default:
+//                nullability = Nullability.UNKNOWN;
+//                break;
+//        }
+//        Mutability mutability = Mutability.MAYBE_WRITABLE;
+//        if (rsMetadata.isReadOnly(column)) {
+//            mutability = Mutability.READ_ONLY;
+//        } else if (rsMetadata.isWritable(column)) {
+//            mutability = Mutability.MAYBE_WRITABLE;
+//        } else if (rsMetadata.isDefinitelyWritable(column)) {
+//            mutability = Mutability.WRITABLE;
+//        }
+//        return new ColumnDefinition(
+//                id,
+//                rsMetadata.getColumnType(column),
+//                rsMetadata.getColumnTypeName(column),
+//                rsMetadata.getColumnClassName(column),
+//                nullability,
+//                mutability,
+//                rsMetadata.getPrecision(column),
+//                rsMetadata.getScale(column),
+//                rsMetadata.isSigned(column),
+//                rsMetadata.getColumnDisplaySize(column),
+//                rsMetadata.isAutoIncrement(column),
+//                rsMetadata.isCaseSensitive(column),
+//                rsMetadata.isSearchable(column),
+//                rsMetadata.isCurrency(column),
+//                false
+//        );
+//    }
 
     protected Set<ColumnIdentity> primaryKeyColumns(
             Connection connection,
@@ -662,21 +662,21 @@ public class DatabendClient implements DatabendConnection {
         return pkColumns;
     }
 
-    @Override
-    public Map<ColumnIdentity, ColumnDefinition> describeColumnsByQuerying(
-            Connection db,
-            TableIdentity tableId
-    ) throws SQLException {
-        String queryStr = "SELECT * FROM {} LIMIT 1";
-        String quotedName = expressionBuilder().append(tableId).toString();
-        try (PreparedStatement stmt = db.prepareStatement(queryStr)) {
-            stmt.setString(1, quotedName);
-            try (ResultSet rs = stmt.executeQuery()) {
-                ResultSetMetaData rsmd = rs.getMetaData();
-                return describeColumns(rsmd);
-            }
-        }
-    }
+//    @Override
+//    public Map<ColumnIdentity, ColumnDefinition> describeColumnsByQuerying(
+//            Connection db,
+//            TableIdentity tableId
+//    ) throws SQLException {
+//        String queryStr = "SELECT * FROM {} LIMIT 1";
+//        String quotedName = expressionBuilder().append(tableId).toString();
+//        try (PreparedStatement stmt = db.prepareStatement(queryStr)) {
+//            stmt.setString(1, quotedName);
+//            try (ResultSet rs = stmt.executeQuery()) {
+//                ResultSetMetaData rsmd = rs.getMetaData();
+//                return describeColumns(rsmd);
+//            }
+//        }
+//    }
 
     @Override
     public TableDefinition describeTable(
