@@ -140,9 +140,7 @@ public class DatabendSinkConfig extends AbstractConfig {
     public static final String PK_FIELDS = "pk.fields";
     private static final String PK_FIELDS_DEFAULT = "";
     private static final String PK_FIELDS_DOC =
-            "List of comma-separated primary key field names."
-                    + "    If empty, all fields from the value struct will be used, otherwise used to extract "
-                    + "the desired fields.";
+            "List of comma-separated primary key field names.";
     private static final String PK_FIELDS_DISPLAY = "Primary Key Fields";
 
     public static final String PK_MODE = "pk.mode";

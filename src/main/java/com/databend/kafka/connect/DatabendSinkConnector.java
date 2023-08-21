@@ -1,9 +1,7 @@
 package com.databend.kafka.connect;
 
-import java.util.Locale;
 import java.util.Optional;
 
-import com.databend.kafka.connect.databendclient.DatabendConnection;
 import com.databend.kafka.connect.sink.DatabendSinkConfig;
 import com.databend.kafka.connect.sink.DatabendSinkTask;
 import com.databend.kafka.connect.util.Version;
@@ -11,7 +9,6 @@ import org.apache.kafka.common.config.Config;
 import org.apache.kafka.common.config.ConfigDef;
 import org.apache.kafka.common.config.ConfigValue;
 import org.apache.kafka.connect.connector.Task;
-import org.apache.kafka.connect.sink.ErrantRecordReporter;
 import org.apache.kafka.connect.sink.SinkConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,18 +58,24 @@ public class DatabendSinkConnector extends SinkConnector {
         /** get configuration parsed and validated individually */
         Config config = super.validate(connectorConfigs);
 
-        return validateDeleteEnabledPkMode(config);
+        return validateDeleteEnabledPkFields(config);
     }
 
-    private Config validateDeleteEnabledPkMode(Config config) {
+    private Config validateDeleteEnabledPkFields(Config config) {
 
-        if (configValue(config, PK_FIELDS).isPresent()) {
+        if (configValue(config, PK_FIELDS).isPresent() && !configValue(config, PK_FIELDS).get().value().toString().replace("[]", "").isEmpty()) {
             return config;
         } else {
-            List<ConfigValue> configValues = config.configValues();
+            configValue(config, DELETE_ENABLED)
+                    .filter(deleteEnabled -> Boolean.TRUE.equals(deleteEnabled.value()))
+                    .ifPresent(deleteEnabled -> {
+                        String conflictMsg = "Deletes are only supported when pk_fields not empty";
+                        deleteEnabled.addErrorMessage(conflictMsg);
+                    });
 
+            List<ConfigValue> configValues = config.configValues();
             for (ConfigValue cfg : configValues) {
-                if (PK_FIELDS.equals(cfg.name()) && cfg.errorMessages().isEmpty()) {
+                if (DELETE_ENABLED.equals(cfg.name())) {
                     cfg.value("false");
                     break;
                 }
