@@ -49,6 +49,14 @@ public class DatabendSinkConfig extends AbstractConfig {
     private static final String CONNECTION_USER_DOC = "Databend connection user.";
     private static final String CONNECTION_USER_DISPLAY = "Databend User";
 
+    public static final String CONNECTION_SSL = CONNECTION_PREFIX + "ssl";
+    private static final String CONNECTION_SSL_DOC = "Databend connection ssl config.";
+    private static final String CONNECTION_SSL_DISPLAY = "ssl true or false";
+
+    public static final String CONNECTION_QUERY_TIMEOUT = CONNECTION_PREFIX + "query_timeout";
+    private static final String CONNECTION_QUERY_TIMEOUT_DOC = "Databend queryTimeout config.";
+    private static final String CONNECTION_QUERY_TIMEOUT_DISPLAY = "query timeout";
+
     public static final String CONNECTION_PASSWORD = CONNECTION_PREFIX + "password";
     private static final String CONNECTION_PASSWORD_DOC = "Databend connection password.";
     private static final String CONNECTION_PASSWORD_DISPLAY = "Databend Password";
@@ -240,6 +248,28 @@ public class DatabendSinkConfig extends AbstractConfig {
                     CONNECTION_USER_DISPLAY
             )
             .define(
+                    CONNECTION_SSL,
+                    ConfigDef.Type.BOOLEAN,
+                    null,
+                    ConfigDef.Importance.HIGH,
+                    CONNECTION_SSL_DOC,
+                    CONNECTION_GROUP,
+                    2,
+                    ConfigDef.Width.MEDIUM,
+                    CONNECTION_SSL_DISPLAY
+            )
+            .define(
+                    CONNECTION_QUERY_TIMEOUT,
+                    ConfigDef.Type.INT,
+                    120,
+                    ConfigDef.Importance.HIGH,
+                    CONNECTION_QUERY_TIMEOUT_DOC,
+                    CONNECTION_GROUP,
+                    2,
+                    ConfigDef.Width.MEDIUM,
+                    CONNECTION_QUERY_TIMEOUT_DISPLAY
+            )
+            .define(
                     CONNECTION_PASSWORD,
                     ConfigDef.Type.PASSWORD,
                     null,
@@ -407,6 +437,8 @@ public class DatabendSinkConfig extends AbstractConfig {
 
     public final String connectionUrl;
     public final String connectionUser;
+    public final Boolean ssl;
+    public final Integer queryTimeout;
     public final String connectionPassword;
     public final int connectionAttempts;
     public final long connectionBackoffMs;
@@ -431,6 +463,8 @@ public class DatabendSinkConfig extends AbstractConfig {
         pkMode = PrimaryKeyMode.valueOf(getString(PK_MODE).toUpperCase());
         connectionUrl = getString(CONNECTION_URL);
         connectionUser = getString(CONNECTION_USER);
+        ssl = getBoolean(CONNECTION_SSL);
+        queryTimeout = getInt(CONNECTION_QUERY_TIMEOUT);
         connectionPassword = getPasswordValue(CONNECTION_PASSWORD);
         connectionAttempts = getInt(CONNECTION_ATTEMPTS);
         connectionBackoffMs = getLong(CONNECTION_BACKOFF);
@@ -457,6 +491,7 @@ public class DatabendSinkConfig extends AbstractConfig {
         }
         return null;
     }
+
     public EnumSet<TableType> tableTypes() {
         return tableTypes;
     }
