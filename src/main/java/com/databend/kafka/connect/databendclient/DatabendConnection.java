@@ -92,21 +92,21 @@ public interface DatabendConnection extends ConnectionProvider {
      */
     boolean tableExists(Connection connection, TableIdentity tableId) throws SQLException;
 
-    /**
-     * Create the definition for the columns described by the database metadata using the current
-     * schema and catalog patterns defined in the configuration.
-     *
-     * @param connection    the database connection; may not be null
-     * @param tablePattern  the pattern for matching the tables; may be null
-     * @param columnPattern the pattern for matching the columns; may be null
-     * @return the column definitions keyed by their {@link ColumnIdentity}; never null
-     * @throws SQLException if there is an error accessing the metadata
-     */
-    Map<ColumnIdentity, ColumnDefinition> describeColumns(
-            Connection connection,
-            String tablePattern,
-            String columnPattern
-    ) throws SQLException;
+//    /**
+//     * Create the definition for the columns described by the database metadata using the current
+//     * schema and catalog patterns defined in the configuration.
+//     *
+//     * @param connection    the database connection; may not be null
+//     * @param tablePattern  the pattern for matching the tables; may be null
+//     * @param columnPattern the pattern for matching the columns; may be null
+//     * @return the column definitions keyed by their {@link ColumnIdentity}; never null
+//     * @throws SQLException if there is an error accessing the metadata
+//     */
+//    Map<ColumnIdentity, ColumnDefinition> describeColumns(
+//            Connection connection,
+//            String tablePattern,
+//            String columnPattern
+//    ) throws SQLException;
 
     /**
      * Create the definition for the columns described by the database metadata.
@@ -127,17 +127,17 @@ public interface DatabendConnection extends ConnectionProvider {
             String columnPattern
     ) throws SQLException;
 
-    /**
-     * Create the definition for the columns in the result set.
-     *
-     * @param rsMetadata the result set metadata; may not be null
-     * @return the column definitions keyed by their {@link ColumnIdentity} and in the same order as the
-     * result set; never null
-     * @throws SQLException if there is an error accessing the result set metadata
-     */
-    Map<ColumnIdentity, ColumnDefinition> describeColumns(
-            ResultSetMetaData rsMetadata
-    ) throws SQLException;
+//    /**
+//     * Create the definition for the columns in the result set.
+//     *
+//     * @param rsMetadata the result set metadata; may not be null
+//     * @return the column definitions keyed by their {@link ColumnIdentity} and in the same order as the
+//     * result set; never null
+//     * @throws SQLException if there is an error accessing the result set metadata
+//     */
+//    Map<ColumnIdentity, ColumnDefinition> describeColumns(
+//            ResultSetMetaData rsMetadata
+//    ) throws SQLException;
 
     /**
      * Get the definition of the specified table.
@@ -149,19 +149,19 @@ public interface DatabendConnection extends ConnectionProvider {
      */
     TableDefinition describeTable(Connection connection, TableIdentity tableId) throws SQLException;
 
-    /**
-     * Create the definition for the columns in the result set returned when querying the table. This
-     * may not work if the table is empty.
-     *
-     * @param connection the database connection; may not be null
-     * @param tableId    the name of the table; may be null
-     * @return the column definitions keyed by their {@link ColumnIdentity}; never null
-     * @throws SQLException if there is an error accessing the result set metadata
-     */
-    Map<ColumnIdentity, ColumnDefinition> describeColumnsByQuerying(
-            Connection connection,
-            TableIdentity tableId
-    ) throws SQLException;
+//    /**
+//     * Create the definition for the columns in the result set returned when querying the table. This
+//     * may not work if the table is empty.
+//     *
+//     * @param connection the database connection; may not be null
+//     * @param tableId    the name of the table; may be null
+//     * @return the column definitions keyed by their {@link ColumnIdentity}; never null
+//     * @throws SQLException if there is an error accessing the result set metadata
+//     */
+//    Map<ColumnIdentity, ColumnDefinition> describeColumnsByQuerying(
+//            Connection connection,
+//            TableIdentity tableId
+//    ) throws SQLException;
 
     /**
      * Create a criteria generator for queries that look for changed data using timestamp and
