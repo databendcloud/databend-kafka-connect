@@ -64,13 +64,10 @@ public class DatabendWriter {
                 buffer.flush();
                 buffer.close();
             }
-            connection.commit();
+//            connection.commit();
         } catch (SQLException | TableAlterOrCreateException e) {
-            try {
-                connection.rollback();
-            } catch (SQLException sqle) {
-                e.addSuppressed(sqle);
-            }
+            e.addSuppressed(e);
+            throw e;
         }
     }
 

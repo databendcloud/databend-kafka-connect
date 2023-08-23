@@ -125,10 +125,10 @@ public class TimestampIncrementingCriteria {
         Timestamp beginTime = values.beginTimestampValue();
         Timestamp endTime = values.endTimestampValue();
         Long incOffset = values.lastIncrementedValue();
-        stmt.setTimestamp(1, endTime, DateTimeUtils.getTimeZoneCalendar(timeZone));
-        stmt.setTimestamp(2, beginTime, DateTimeUtils.getTimeZoneCalendar(timeZone));
+        stmt.setTimestamp(1, endTime);
+        stmt.setTimestamp(2, beginTime);
         stmt.setLong(3, incOffset);
-        stmt.setTimestamp(4, beginTime, DateTimeUtils.getTimeZoneCalendar(timeZone));
+        stmt.setTimestamp(4, beginTime);
         log.debug(
                 "Executing prepared statement with start time value = {} end time = {} and incrementing"
                         + " value = {}", DateTimeUtils.formatTimestamp(beginTime, timeZone),
@@ -151,8 +151,8 @@ public class TimestampIncrementingCriteria {
     ) throws SQLException {
         Timestamp beginTime = values.beginTimestampValue();
         Timestamp endTime = values.endTimestampValue();
-        stmt.setTimestamp(1, beginTime, DateTimeUtils.getTimeZoneCalendar(timeZone));
-        stmt.setTimestamp(2, endTime, DateTimeUtils.getTimeZoneCalendar(timeZone));
+        stmt.setTimestamp(1, beginTime);
+        stmt.setTimestamp(2, endTime);
         log.debug("Executing prepared statement with timestamp value = {} end time = {}",
                 DateTimeUtils.formatTimestamp(beginTime, timeZone),
                 DateTimeUtils.formatTimestamp(endTime, timeZone)

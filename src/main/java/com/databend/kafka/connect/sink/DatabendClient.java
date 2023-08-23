@@ -1371,8 +1371,7 @@ public class DatabendClient implements DatabendConnection {
                 case org.apache.kafka.connect.data.Timestamp.LOGICAL_NAME:
                     statement.setTimestamp(
                             index,
-                            new java.sql.Timestamp(((java.util.Date) value).getTime()),
-                            DateTimeUtils.getTimeZoneCalendar(timeZone)
+                            new java.sql.Timestamp(((java.util.Date) value).getTime())
                     );
                     return true;
                 default:

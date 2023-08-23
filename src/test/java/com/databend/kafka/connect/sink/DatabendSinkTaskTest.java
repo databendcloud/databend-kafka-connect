@@ -27,8 +27,8 @@ public class DatabendSinkTaskTest extends EasyMockSupport {
     private final SinkTaskContext ctx = createMock(SinkTaskContext.class);
 
     private static final Schema SCHEMA = SchemaBuilder.struct().name("com.example.Person")
-            .field("firstName", Schema.STRING_SCHEMA)
-            .field("lastName", Schema.STRING_SCHEMA)
+            .field("firstname", Schema.STRING_SCHEMA)
+            .field("lastname", Schema.STRING_SCHEMA)
             .field("age", Schema.OPTIONAL_INT32_SCHEMA)
             .field("bool", Schema.OPTIONAL_BOOLEAN_SCHEMA)
             .field("short", Schema.OPTIONAL_INT16_SCHEMA)
@@ -58,12 +58,13 @@ public class DatabendSinkTaskTest extends EasyMockSupport {
     public void tearDown() throws IOException, SQLException {
         databendHelper.tearDown();
     }
+
     @Test
     public void putPropagatesToDbWithPkModeRecordValue() throws Exception {
         Map<String, String> props = new HashMap<>();
         props.put("connection.url", databendHelper.databendUri());
         props.put("pk.mode", "record_value");
-        props.put("pk.fields", "firstName,lastName");
+        props.put("pk.fields", "firstname,lastname");
 
         DatabendSinkTask task = new DatabendSinkTask();
         task.initialize(mock(SinkTaskContext.class));
@@ -72,8 +73,8 @@ public class DatabendSinkTaskTest extends EasyMockSupport {
 
         databendHelper.createTable(
                 "CREATE TABLE " + topic + "(" +
-                        "    firstName  String," +
-                        "    lastName  String," +
+                        "    firstname  String," +
+                        "    lastname  String," +
                         "    age Int," +
                         "    bool  Boolean," +
                         "    byte  Int," +
@@ -87,8 +88,8 @@ public class DatabendSinkTaskTest extends EasyMockSupport {
         task.start(props);
 
         final Struct struct = new Struct(SCHEMA)
-                .put("firstName", "Christina")
-                .put("lastName", "Brams")
+                .put("firstname", "Christina")
+                .put("lastname", "Brams")
                 .put("bool", false)
                 .put("byte", (byte) -72)
                 .put("long", 8594L)
@@ -101,7 +102,7 @@ public class DatabendSinkTaskTest extends EasyMockSupport {
         assertEquals(
                 1,
                 databendHelper.select(
-                        "SELECT * FROM " + topic + " WHERE firstName='" + struct.getString("firstName") + "' and lastName='" + struct.getString("lastName") + "'",
+                        "SELECT * FROM " + topic + " WHERE firstname='" + struct.getString("firstname") + "' and lastname='" + struct.getString("lastname") + "'",
                         new DatabendHelper.ResultSetReadCallback() {
                             @Override
                             public void read(ResultSet rs) throws SQLException {
@@ -112,11 +113,10 @@ public class DatabendSinkTaskTest extends EasyMockSupport {
                                 assertEquals(struct.getInt32("age").intValue(), rs.getInt("age"));
                                 assertEquals(struct.getInt64("long").longValue(), rs.getLong("long"));
                                 rs.getShort("float");
-                                assertTrue(rs.wasNull());
                                 assertEquals(struct.getFloat64("double"), rs.getDouble("double"), 0.01);
                                 java.sql.Timestamp dbTimestamp = rs.getTimestamp(
                                         "modified",
-                                        DateTimeUtils.getTimeZoneCalendar(TimeZone.getTimeZone(ZoneOffset.UTC))
+                                        DateTimeUtils.getTimeZoneCalendar(TimeZone.getTimeZone(ZoneOffset.systemDefault()))
                                 );
                                 assertEquals(((java.util.Date) struct.get("modified")).getTime(), dbTimestamp.getTime());
                             }

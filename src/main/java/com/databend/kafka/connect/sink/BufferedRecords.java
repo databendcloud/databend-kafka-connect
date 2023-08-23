@@ -155,6 +155,7 @@ public class BufferedRecords {
             log.debug("Records is empty");
             return new ArrayList<>();
         }
+        System.out.println(records.size());
         log.debug("Flushing {} buffered records", records.size());
         for (SinkRecord record : records) {
             if (isNull(record.value()) && nonNull(deleteStatementBinder)) {
