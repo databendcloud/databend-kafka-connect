@@ -11,6 +11,7 @@ import com.databend.kafka.connect.databendclient.ColumnDefinition.Nullability;
 import com.databend.kafka.connect.databendclient.ColumnDefinition.Mutability;
 import org.apache.kafka.common.config.AbstractConfig;
 import org.apache.kafka.common.config.types.Password;
+import org.apache.kafka.common.protocol.types.Field;
 import org.apache.kafka.connect.data.Decimal;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
@@ -488,7 +489,8 @@ public class DatabendClient implements DatabendConnection {
                 connection,
                 catalogPattern,
                 schemaPattern,
-                tablePattern
+                tablePattern,
+                config.getList(DatabendSinkConfig.PK_FIELDS)
         );
         Map<ColumnIdentity, ColumnDefinition> results = new HashMap<>();
         try (ResultSet rs = connection.getMetaData().getColumns(
@@ -505,13 +507,14 @@ public class DatabendClient implements DatabendConnection {
                 final TableIdentity tableId = new TableIdentity(catalogName, schemaName, tableName);
                 final String columnName = rs.getString(4);
                 final ColumnIdentity columnId = new ColumnIdentity(tableId, columnName, null);
-                final int jdbcType = rs.getInt(5);
+                System.out.println(rs.getString(5));
+                final String databendType = rs.getString(5).toLowerCase();
                 final String typeName = rs.getString(6);
                 final int precision = rs.getInt(7);
                 final int scale = rs.getInt(9);
                 final String typeClassName = null;
                 Nullability nullability;
-                final int nullableValue = rs.getInt(11);
+                final int nullableValue = rs.getInt("nullable");
                 switch (nullableValue) {
                     case DatabaseMetaData.columnNoNulls:
                         nullability = Nullability.NOT_NULL;
@@ -540,14 +543,10 @@ public class DatabendClient implements DatabendConnection {
                 Boolean currency = null;
                 Integer displaySize = null;
                 boolean isPrimaryKey = pkColumns.contains(columnId);
-                if (isPrimaryKey) {
-                    // Some DBMSes report pks as null
-                    nullability = Nullability.NOT_NULL;
-                }
                 ColumnDefinition defn = columnDefinition(
                         rs,
                         columnId,
-                        jdbcType,
+                        databendType,
                         typeName,
                         typeClassName,
                         nullability,
@@ -642,21 +641,24 @@ public class DatabendClient implements DatabendConnection {
             Connection connection,
             String catalogPattern,
             String schemaPattern,
-            String tablePattern
+            String tablePattern,
+            List<String> pkFields
     ) throws SQLException {
 
         // Get the primary keys of the table(s) ...
         final Set<ColumnIdentity> pkColumns = new HashSet<>();
-        try (ResultSet rs = connection.getMetaData().getPrimaryKeys(
-                catalogPattern, schemaPattern, tablePattern)) {
+        try (ResultSet rs = connection.getMetaData().getColumns(
+                catalogPattern, schemaPattern, tablePattern, null)) {
             while (rs.next()) {
                 String catalogName = rs.getString(1);
                 String schemaName = rs.getString(2);
                 String tableName = rs.getString(3);
                 TableIdentity tableId = new TableIdentity(catalogName, schemaName, tableName);
                 final String colName = rs.getString(4);
-                ColumnIdentity columnId = new ColumnIdentity(tableId, colName);
-                pkColumns.add(columnId);
+                if (pkFields.contains(colName)) {
+                    ColumnIdentity columnId = new ColumnIdentity(tableId, colName);
+                    pkColumns.add(columnId);
+                }
             }
         }
         return pkColumns;
@@ -748,7 +750,7 @@ public class DatabendClient implements DatabendConnection {
      *
      * @param resultSet        the result set
      * @param id               the column identifier
-     * @param jdbcType         the JDBC type of the column
+     * @param databendType     the JDBC type of the column
      * @param typeName         the name of the column's type
      * @param classNameForType the name of the class used as instances of the value when {@link
      *                         ResultSet#getObject(int)} is called
@@ -769,7 +771,7 @@ public class DatabendClient implements DatabendConnection {
     protected ColumnDefinition columnDefinition(
             ResultSet resultSet,
             ColumnIdentity id,
-            int jdbcType,
+            String databendType,
             String typeName,
             String classNameForType,
             Nullability nullability,
@@ -786,7 +788,7 @@ public class DatabendClient implements DatabendConnection {
     ) {
         return new ColumnDefinition(
                 id,
-                jdbcType,
+                databendType,
                 typeName,
                 classNameForType,
                 nullability,
@@ -835,12 +837,12 @@ public class DatabendClient implements DatabendConnection {
      * Use the supplied {@link SchemaBuilder} to add a field that corresponds to the column with the
      * specified definition. This is intended to be easily overridden by subclasses.
      *
-     * @param columnDefn the definition of the column; may not be null
-     * @param builder    the schema builder; may not be null
-     * @param fieldName  the name of the field and {@link #fieldNameFor(ColumnDefinition) computed}
-     *                   from the column definition; may not be null
-     * @param sqlType    the JDBC {@link java.sql.Types type} as obtained from the column definition
-     * @param optional   true if the field is to be optional as obtained from the column definition
+     * @param columnDefn   the definition of the column; may not be null
+     * @param builder      the schema builder; may not be null
+     * @param fieldName    the name of the field and {@link #fieldNameFor(ColumnDefinition) computed}
+     *                     from the column definition; may not be null
+     * @param databendType the JDBC {@link Types type} as obtained from the column definition
+     * @param optional     true if the field is to be optional as obtained from the column definition
      * @return the name of the field, or null if no field was added
      */
     @SuppressWarnings("fallthrough")
@@ -848,29 +850,23 @@ public class DatabendClient implements DatabendConnection {
             final ColumnDefinition columnDefn,
             final SchemaBuilder builder,
             final String fieldName,
-            final int sqlType,
+            final String databendType,
             final boolean optional
     ) {
         int precision = columnDefn.precision();
         int scale = columnDefn.scale();
-        switch (sqlType) {
-            case Types.NULL: {
+        switch (databendType) {
+            case DatabendTypes.NULL: {
                 glog.debug("JDBC type 'NULL' not currently supported for column '{}'", fieldName);
                 return null;
             }
 
-            case Types.BOOLEAN: {
+            case DatabendTypes.BOOLEAN: {
                 builder.field(fieldName, optional ? Schema.OPTIONAL_BOOLEAN_SCHEMA : Schema.BOOLEAN_SCHEMA);
                 break;
             }
 
-            // ints <= 8 bits
-            case Types.BIT: {
-                builder.field(fieldName, optional ? Schema.OPTIONAL_INT8_SCHEMA : Schema.INT8_SCHEMA);
-                break;
-            }
-
-            case Types.TINYINT: {
+            case DatabendTypes.INT8: {
                 if (columnDefn.isSignedNumber()) {
                     builder.field(fieldName, optional ? Schema.OPTIONAL_INT8_SCHEMA : Schema.INT8_SCHEMA);
                 } else {
@@ -880,7 +876,7 @@ public class DatabendClient implements DatabendConnection {
             }
 
             // 16 bit ints
-            case Types.SMALLINT: {
+            case DatabendTypes.INT16: {
                 if (columnDefn.isSignedNumber()) {
                     builder.field(fieldName, optional ? Schema.OPTIONAL_INT16_SCHEMA : Schema.INT16_SCHEMA);
                 } else {
@@ -890,7 +886,7 @@ public class DatabendClient implements DatabendConnection {
             }
 
             // 32 bit ints
-            case Types.INTEGER: {
+            case DatabendTypes.INT32: {
                 if (columnDefn.isSignedNumber()) {
                     builder.field(fieldName, optional ? Schema.OPTIONAL_INT32_SCHEMA : Schema.INT32_SCHEMA);
                 } else {
@@ -900,32 +896,22 @@ public class DatabendClient implements DatabendConnection {
             }
 
             // 64 bit ints
-            case Types.BIGINT: {
+            case DatabendTypes.INT64: {
                 builder.field(fieldName, optional ? Schema.OPTIONAL_INT64_SCHEMA : Schema.INT64_SCHEMA);
                 break;
             }
 
-            // REAL is a single precision floating point value, i.e. a Java float
-            case Types.REAL: {
+            case DatabendTypes.FLOAT32: {
                 builder.field(fieldName, optional ? Schema.OPTIONAL_FLOAT32_SCHEMA : Schema.FLOAT32_SCHEMA);
                 break;
             }
 
-            // FLOAT is, confusingly, double precision and effectively the same as DOUBLE. See REAL
-            // for single precision
-            case Types.FLOAT:
-            case Types.DOUBLE: {
+            case DatabendTypes.FLOAT64: {
                 builder.field(fieldName, optional ? Schema.OPTIONAL_FLOAT64_SCHEMA : Schema.FLOAT64_SCHEMA);
                 break;
             }
 
-            case Types.NUMERIC:
-                glog.debug("NUMERIC with precision: '{}' and scale: '{}'", precision, scale);
-                if (scale == 0 && precision <= MAX_INTEGER_TYPE_PRECISION) { // integer
-                    builder.field(fieldName, integerSchema(optional, precision));
-                    break;
-                }
-            case Types.DECIMAL: {
+            case DatabendTypes.DECIMAL: {
                 glog.debug("DECIMAL with precision: '{}' and scale: '{}'", precision, scale);
                 scale = decimalScale(columnDefn);
                 SchemaBuilder fieldBuilder = Decimal.builder(scale);
@@ -937,34 +923,13 @@ public class DatabendClient implements DatabendConnection {
                 break;
             }
 
-            case Types.CHAR:
-            case Types.VARCHAR:
-            case Types.LONGVARCHAR:
-            case Types.NCHAR:
-            case Types.NVARCHAR:
-            case Types.LONGNVARCHAR:
-            case Types.CLOB:
-            case Types.NCLOB:
-            case Types.DATALINK:
-            case Types.SQLXML: {
-                // Some of these types will have fixed size, but we drop this from the schema conversion
-                // since only fixed byte arrays can have a fixed size
+            case DatabendTypes.STRING: {
                 builder.field(fieldName, optional ? Schema.OPTIONAL_STRING_SCHEMA : Schema.STRING_SCHEMA);
                 break;
             }
 
-            // Binary == fixed bytes
-            // BLOB, VARBINARY, LONGVARBINARY == bytes
-            case Types.BINARY:
-            case Types.BLOB:
-            case Types.VARBINARY:
-            case Types.LONGVARBINARY: {
-                builder.field(fieldName, optional ? Schema.OPTIONAL_BYTES_SCHEMA : Schema.BYTES_SCHEMA);
-                break;
-            }
-
             // Date is day + moth + year
-            case Types.DATE: {
+            case DatabendTypes.DATE: {
                 SchemaBuilder dateSchemaBuilder = org.apache.kafka.connect.data.Date.builder();
                 if (optional) {
                     dateSchemaBuilder.optional();
@@ -973,11 +938,9 @@ public class DatabendClient implements DatabendConnection {
                 break;
             }
 
-            // Time is a time of day -- hour, minute, seconds, nanoseconds
-            case Types.TIME:
 
-                // Timestamp is a date + time
-            case Types.TIMESTAMP: {
+            // Timestamp is a date + time
+            case DatabendTypes.TIMESTAMP: {
                 SchemaBuilder timeSchemaBuilder = org.apache.kafka.connect.data.Time.builder();
                 if (optional) {
                     timeSchemaBuilder.optional();
@@ -986,15 +949,11 @@ public class DatabendClient implements DatabendConnection {
                 break;
             }
 
-            case Types.ARRAY:
+            case DatabendTypes.ARRAY:
+            case DatabendTypes.MAP:
+            case DatabendTypes.TUPLE:
                 builder.field(fieldName, optional ? Schema.OPTIONAL_STRING_SCHEMA : Schema.STRING_SCHEMA);
                 break;
-            case Types.JAVA_OBJECT:
-            case Types.OTHER:
-            case Types.DISTINCT:
-            case Types.STRUCT:
-            case Types.REF:
-            case Types.ROWID:
             default: {
                 glog.warn("Databend  ({}) not currently supported", columnDefn.typeName());
                 return null;
@@ -1056,21 +1015,12 @@ public class DatabendClient implements DatabendConnection {
     ) {
         switch (mapping.columnDefn().type()) {
 
-            case Types.BOOLEAN: {
+            case DatabendTypes.BOOLEAN: {
                 return rs -> rs.getBoolean(col);
             }
 
-            case Types.BIT: {
-                /**
-                 * BIT should be either 0 or 1.
-                 * TODO: Postgres handles this differently, returning a string "t" or "f". See the
-                 * elasticsearch-jdbc plugin for an example of how this is handled
-                 */
-                return rs -> rs.getByte(col);
-            }
-
             // 8 bits int
-            case Types.TINYINT: {
+            case DatabendTypes.INT8: {
                 if (defn.isSignedNumber()) {
                     return rs -> rs.getByte(col);
                 } else {
@@ -1079,7 +1029,7 @@ public class DatabendClient implements DatabendConnection {
             }
 
             // 16 bits int
-            case Types.SMALLINT: {
+            case DatabendTypes.INT16: {
                 if (defn.isSignedNumber()) {
                     return rs -> rs.getShort(col);
                 } else {
@@ -1088,7 +1038,7 @@ public class DatabendClient implements DatabendConnection {
             }
 
             // 32 bits int
-            case Types.INTEGER: {
+            case DatabendTypes.INT32: {
                 if (defn.isSignedNumber()) {
                     return rs -> rs.getInt(col);
                 } else {
@@ -1097,144 +1047,47 @@ public class DatabendClient implements DatabendConnection {
             }
 
             // 64 bits int
-            case Types.BIGINT: {
+            case DatabendTypes.INT64: {
                 return rs -> rs.getLong(col);
             }
 
-            // REAL is a single precision floating point value, i.e. a Java float
-            case Types.REAL: {
-                return rs -> rs.getFloat(col);
-            }
 
             // FLOAT is, confusingly, double precision and effectively the same as DOUBLE. See REAL
             // for single precision
-            case Types.FLOAT:
-            case Types.DOUBLE: {
+            case DatabendTypes.FLOAT32:
+                return rs -> rs.getFloat(col);
+            case DatabendTypes.FLOAT64: {
                 return rs -> rs.getDouble(col);
             }
 
-            case Types.DECIMAL: {
+            case DatabendTypes.DECIMAL: {
                 int precision = defn.precision();
                 glog.debug("DECIMAL with precision: '{}' and scale: '{}'", precision, defn.scale());
                 int scale = decimalScale(defn);
                 return rs -> rs.getBigDecimal(col, scale);
             }
 
-            case Types.CHAR:
-            case Types.VARCHAR:
-            case Types.LONGVARCHAR: {
+            case DatabendTypes.STRING:
                 return rs -> rs.getString(col);
-            }
 
-            case Types.NCHAR:
-            case Types.NVARCHAR:
-            case Types.LONGNVARCHAR: {
-                return rs -> rs.getNString(col);
-            }
-
-            // Binary == fixed, VARBINARY and LONGVARBINARY == bytes
-            case Types.BINARY:
-            case Types.VARBINARY:
-            case Types.LONGVARBINARY: {
-                return rs -> rs.getBytes(col);
-            }
 
             // Date is day + month + year
-            case Types.DATE: {
+            case DatabendTypes.DATE: {
                 return rs -> rs.getDate(col,
                         DateTimeUtils.getTimeZoneCalendar(TimeZone.getTimeZone(ZoneOffset.UTC)));
             }
 
             // Timestamp is a date + time
-            case Types.TIMESTAMP:
+            case DatabendTypes.TIMESTAMP:
                 // Time is a time of day -- hour, minute, seconds, nanoseconds
-            case Types.TIME: {
                 return rs -> rs.getTime(col, DateTimeUtils.getTimeZoneCalendar(timeZone));
-            }
 
-
-            // Datalink is basically a URL -> string
-            case Types.DATALINK: {
-                return rs -> {
-                    URL url = rs.getURL(col);
-                    return (url != null ? url.toString() : null);
-                };
-            }
-
-            // BLOB == fixed
-            case Types.BLOB: {
-                return rs -> {
-                    Blob blob = rs.getBlob(col);
-                    if (blob == null) {
-                        return null;
-                    } else {
-                        try {
-                            if (blob.length() > Integer.MAX_VALUE) {
-                                throw new IOException("Can't process BLOBs longer than " + Integer.MAX_VALUE);
-                            }
-                            return blob.getBytes(1, (int) blob.length());
-                        } finally {
-                            if (isJdbc4) {
-                                free(blob);
-                            }
-                        }
-                    }
-                };
-            }
-            case Types.CLOB:
-                return rs -> {
-                    Clob clob = rs.getClob(col);
-                    if (clob == null) {
-                        return null;
-                    } else {
-                        try {
-                            if (clob.length() > Integer.MAX_VALUE) {
-                                throw new IOException("Can't process CLOBs longer than " + Integer.MAX_VALUE);
-                            }
-                            return clob.getSubString(1, (int) clob.length());
-                        } finally {
-                            if (isJdbc4) {
-                                free(clob);
-                            }
-                        }
-                    }
-                };
-            case Types.NCLOB: {
-                return rs -> {
-                    Clob clob = rs.getNClob(col);
-                    if (clob == null) {
-                        return null;
-                    } else {
-                        try {
-                            if (clob.length() > Integer.MAX_VALUE) {
-                                throw new IOException("Can't process NCLOBs longer than " + Integer.MAX_VALUE);
-                            }
-                            return clob.getSubString(1, (int) clob.length());
-                        } finally {
-                            if (isJdbc4) {
-                                free(clob);
-                            }
-                        }
-                    }
-                };
-            }
-
-            // XML -> string
-            case Types.SQLXML: {
-                return rs -> {
-                    SQLXML xml = rs.getSQLXML(col);
-                    return xml != null ? xml.getString() : null;
-                };
-            }
-
-            case Types.NULL:
-            case Types.ARRAY:
-            case Types.JAVA_OBJECT:
-            case Types.OTHER:
-            case Types.DISTINCT:
-            case Types.STRUCT:
-            case Types.REF:
-            case Types.ROWID:
+            case DatabendTypes.ARRAY:
+                return rs -> rs.getArray(col);
+            case DatabendTypes.MAP:
+            case DatabendTypes.TUPLE:
+                return rs -> rs.getString(col);
+            case DatabendTypes.NULL:
             default: {
                 break;
             }

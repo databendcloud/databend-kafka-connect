@@ -300,6 +300,17 @@ public class DatabendSinkConfig extends AbstractConfig {
                     ConfigDef.Width.SHORT,
                     CONNECTION_BACKOFF_DISPLAY
             )
+            .define(
+                    QUOTE_SQL_IDENTIFIERS_CONFIG,
+                    ConfigDef.Type.STRING,
+                    QUOTE_SQL_IDENTIFIERS_DEFAULT,
+                    ConfigDef.Importance.LOW,
+                    QUOTE_SQL_IDENTIFIERS_DOC,
+                    CONNECTION_GROUP,
+                    6,
+                    ConfigDef.Width.SHORT,
+                    QUOTE_SQL_IDENTIFIERS_DISPLAY
+            )
             // Writes
             .define(
                     INSERT_MODE,
@@ -347,6 +358,16 @@ public class DatabendSinkConfig extends AbstractConfig {
                     1,
                     ConfigDef.Width.LONG,
                     TABLE_NAME_FORMAT_DISPLAY
+            )
+            .define(
+                    PK_MODE,
+                    ConfigDef.Type.STRING,
+                    PK_MODE_DEFAULT,
+                    ConfigDef.Importance.MEDIUM,
+                    PK_MODE_DOC,
+                    DATAMAPPING_GROUP,
+                    3,
+                    ConfigDef.Width.LONG, PK_MODE_DISPLAY
             )
             .define(
                     PK_FIELDS,
@@ -452,7 +473,7 @@ public class DatabendSinkConfig extends AbstractConfig {
     public final PrimaryKeyMode pkMode;
     public final Set<String> fieldsWhitelist;
     public final TimeZone timeZone;
-    public final EnumSet<TableType> tableTypes;
+//    public final EnumSet<TableType> tableTypes;
 
     public final boolean trimSensitiveLogsEnabled;
 
@@ -478,7 +499,7 @@ public class DatabendSinkConfig extends AbstractConfig {
         fieldsWhitelist = new HashSet<>(getList(FIELDS_WHITELIST));
         String dbTimeZone = getString(DB_TIMEZONE_CONFIG);
         timeZone = TimeZone.getTimeZone(ZoneId.of(dbTimeZone));
-        tableTypes = TableType.parse(getList(TABLE_TYPES_CONFIG));
+//        tableTypes = TableType.parse(getList(TABLE_TYPES_CONFIG));
         trimSensitiveLogsEnabled = getBoolean(TRIM_SENSITIVE_LOG_ENABLED);
     }
 
@@ -490,12 +511,14 @@ public class DatabendSinkConfig extends AbstractConfig {
         return null;
     }
 
-    public EnumSet<TableType> tableTypes() {
-        return tableTypes;
-    }
+//    public EnumSet<TableType> tableTypes() {
+//        return tableTypes;
+//    }
 
     public Set<String> tableTypeNames() {
-        return tableTypes().stream().map(TableType::toString).collect(Collectors.toSet());
+        Set<String> s = new HashSet<>();
+        s.add("table");
+        return s;
     }
 
     private static class EnumValidator implements ConfigDef.Validator {

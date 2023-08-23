@@ -21,7 +21,7 @@ public class ColumnDefinition {
 
     private final ColumnIdentity id;
     private final String typeName;
-    private final int databendType;
+    private final String databendType;
     private final int displaySize;
     private final int precision;
     private final int scale;
@@ -37,7 +37,7 @@ public class ColumnDefinition {
 
     public ColumnDefinition(
             ColumnIdentity id,
-            int databendType,
+            String databendType,
             String typeName,
             String classNameForType,
             Nullability nullability,
@@ -77,15 +77,6 @@ public class ColumnDefinition {
      */
     public boolean isAutoIncrement() {
         return autoIncremented;
-    }
-
-    /**
-     * Indicates whether the column's case matters.
-     *
-     * @return <code>true</code> if so; <code>false</code> otherwise
-     */
-    public boolean isCaseSensitive() {
-        return caseSensitive;
     }
 
     /**
@@ -202,7 +193,7 @@ public class ColumnDefinition {
      * @return SQL type from java.sql.Types
      * @see Types
      */
-    public int type() {
+    public String type() {
         return databendType;
     }
 
