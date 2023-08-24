@@ -86,7 +86,7 @@ public class DatabendClient implements DatabendConnection {
         this.jdbcUrl = config.getString(DatabendSinkConfig.CONNECTION_URL);
         tableTypes = sinkConfig.tableTypeNames();
         catalogPattern = DatabendSinkConfig.CATALOG_PATTERN_DEFAULT;
-        databaseName = DatabendSinkConfig.DATABASE_DEFAULT;
+        databaseName = config.getString(DatabendSinkConfig.DATABASE_CONFIG);
         quoteSqlIdentifiers = QuoteWay.get(
                 config.getString(DatabendSinkConfig.QUOTE_SQL_IDENTIFIERS_CONFIG)
         );

@@ -64,7 +64,7 @@ public class DatabendSinkConfig extends AbstractConfig {
     public static final String CONNECTION_ATTEMPTS = CONNECTION_PREFIX + "attempts";
     private static final String CONNECTION_ATTEMPTS_DOC = "Maximum number of attempts to retrieve a valid JDBC connection. "
             + "Must be a positive integer.";
-    private static final String CONNECTION_ATTEMPTS_DISPLAY = "JDBC connection attempts";
+    private static final String CONNECTION_ATTEMPTS_DISPLAY = "Databend connection attempts";
     public static final int CONNECTION_ATTEMPTS_DEFAULT = 3;
 
     public static final String CONNECTION_BACKOFF = CONNECTION_PREFIX + "backoff.ms";
@@ -203,22 +203,14 @@ public class DatabendSinkConfig extends AbstractConfig {
     public static final String TRIM_SENSITIVE_LOG_ENABLED = "trim.sensitive.log";
     private static final String TRIM_SENSITIVE_LOG_ENABLED_DEFAULT = "false";
 
-    public static final String DATABASE_CONFIG = "database";
+    public static final String DATABASE_CONFIG = CONNECTION_PREFIX + "database";
     private static final String DATABASE_DOC =
             "Database  to fetch table metadata from the database.\n"
                     + "   null indicates that the schema name is not used to narrow the search and "
                     + "that all table metadata is fetched, regardless of the schema.";
     private static final String DATABASE_DISPLAY = "database name";
     public static final String DATABASE_DEFAULT = "default";
-
-    public static final String CATALOG_PATTERN_CONFIG = "catalog.pattern";
-    private static final String CATALOG_PATTERN_DOC =
-            "Catalog pattern to fetch table metadata from the database.\n"
-                    + "  * ``\"\"`` retrieves those without a catalog \n"
-                    + "  * null (default) indicates that the schema name is not used to narrow the search and "
-                    + "that all table metadata is fetched, regardless of the catalog.";
-    private static final String CATALOG_PATTERN_DISPLAY = "Schema pattern";
-    public static final String CATALOG_PATTERN_DEFAULT = "default";
+    public static final String CATALOG_PATTERN_DEFAULT = "";
     public static final String BATCH_MAX_ROWS_CONFIG = "batch.max.rows";
 
     public static final ConfigDef CONFIG_DEF = new ConfigDef()
@@ -279,6 +271,17 @@ public class DatabendSinkConfig extends AbstractConfig {
                     CONNECTION_PASSWORD_DISPLAY
             )
             .define(
+                    DATABASE_CONFIG,
+                    ConfigDef.Type.STRING,
+                    null,
+                    ConfigDef.Importance.MEDIUM,
+                    DATABASE_DOC,
+                    CONNECTION_GROUP,
+                    2,
+                    ConfigDef.Width.MEDIUM,
+                    DATABASE_DISPLAY
+            )
+            .define(
                     CONNECTION_ATTEMPTS,
                     ConfigDef.Type.INT,
                     CONNECTION_ATTEMPTS_DEFAULT,
@@ -334,6 +337,17 @@ public class DatabendSinkConfig extends AbstractConfig {
                     2,
                     ConfigDef.Width.SHORT,
                     BATCH_SIZE_DISPLAY
+            )
+            .define(
+                    TABLE_TYPES_CONFIG,
+                    ConfigDef.Type.LIST,
+                    TABLE_TYPES_DEFAULT,
+                    ConfigDef.Importance.LOW,
+                    TABLE_TYPES_DOC,
+                    WRITES_GROUP,
+                    4,
+                    ConfigDef.Width.MEDIUM,
+                    TABLE_TYPES_DISPLAY
             )
             .define(
                     DELETE_ENABLED,
@@ -473,7 +487,7 @@ public class DatabendSinkConfig extends AbstractConfig {
     public final PrimaryKeyMode pkMode;
     public final Set<String> fieldsWhitelist;
     public final TimeZone timeZone;
-//    public final EnumSet<TableType> tableTypes;
+    public final EnumSet<TableType> tableTypes;
 
     public final boolean trimSensitiveLogsEnabled;
 
@@ -499,7 +513,7 @@ public class DatabendSinkConfig extends AbstractConfig {
         fieldsWhitelist = new HashSet<>(getList(FIELDS_WHITELIST));
         String dbTimeZone = getString(DB_TIMEZONE_CONFIG);
         timeZone = TimeZone.getTimeZone(ZoneId.of(dbTimeZone));
-//        tableTypes = TableType.parse(getList(TABLE_TYPES_CONFIG));
+        tableTypes = TableType.parse(getList(TABLE_TYPES_CONFIG));
         trimSensitiveLogsEnabled = getBoolean(TRIM_SENSITIVE_LOG_ENABLED);
     }
 
@@ -511,9 +525,9 @@ public class DatabendSinkConfig extends AbstractConfig {
         return null;
     }
 
-//    public EnumSet<TableType> tableTypes() {
-//        return tableTypes;
-//    }
+    public EnumSet<TableType> tableTypes() {
+        return tableTypes;
+    }
 
     public Set<String> tableTypeNames() {
         Set<String> s = new HashSet<>();
