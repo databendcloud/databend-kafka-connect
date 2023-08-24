@@ -5,6 +5,9 @@ import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.data.Timestamp;
+import org.apache.kafka.connect.errors.ConnectException;
+import org.apache.kafka.connect.errors.RetriableException;
+import org.apache.kafka.connect.sink.ErrantRecordReporter;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.sink.SinkTaskContext;
 import org.easymock.EasyMockSupport;
@@ -13,13 +16,18 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.easymock.EasyMock.*;
+import static org.easymock.EasyMock.anyObject;
+import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 public class DatabendSinkTaskTest extends EasyMockSupport {
     private final DatabendHelper databendHelper = new DatabendHelper(getClass().getSimpleName());
@@ -123,5 +131,203 @@ public class DatabendSinkTaskTest extends EasyMockSupport {
                         }
                 )
         );
+    }
+
+    @Test
+    public void retries() throws SQLException {
+        final int maxRetries = 2;
+        final int retryBackoffMs = 1000;
+
+        List<SinkRecord> records = createRecordsList(1);
+
+        mockWriter.write(records);
+        SQLException chainedException = new SQLException("cause 1");
+        chainedException.setNextException(new SQLException("cause 2"));
+        chainedException.setNextException(new SQLException("cause 3"));
+        expectLastCall().andThrow(chainedException).times(1 + maxRetries);
+
+        ctx.timeout(retryBackoffMs);
+        expectLastCall().times(maxRetries);
+
+        mockWriter.closeQuietly();
+        expectLastCall().times(maxRetries);
+
+        DatabendSinkTask task = new DatabendSinkTask() {
+            @Override
+            void initWriter() {
+                this.writer = mockWriter;
+            }
+        };
+        task.initialize(ctx);
+        expect(ctx.errantRecordReporter()).andReturn(null);
+        replayAll();
+
+        Map<String, String> props = setupBasicProps(maxRetries, retryBackoffMs);
+        task.start(props);
+
+        try {
+            task.put(records);
+            fail();
+        } catch (RetriableException expected) {
+            assertEquals(SQLException.class, expected.getCause().getClass());
+            int i = 0;
+            for (Throwable t : (SQLException) expected.getCause()) {
+                ++i;
+                StringWriter sw = new StringWriter();
+                t.printStackTrace(new PrintWriter(sw));
+                System.out.println("Chained exception " + i + ": " + sw);
+            }
+        }
+
+        try {
+            task.put(records);
+            fail();
+        } catch (RetriableException expected) {
+            assertEquals(SQLException.class, expected.getCause().getClass());
+            int i = 0;
+            for (Throwable t : (SQLException) expected.getCause()) {
+                ++i;
+                StringWriter sw = new StringWriter();
+                t.printStackTrace(new PrintWriter(sw));
+                System.out.println("Chained exception " + i + ": " + sw);
+            }
+        }
+
+        try {
+            task.put(records);
+            fail();
+        } catch (RetriableException e) {
+            fail("Non-retriable exception expected");
+        } catch (ConnectException expected) {
+            assertEquals(SQLException.class, expected.getCause().getClass());
+            int i = 0;
+            for (Throwable t : (SQLException) expected.getCause()) {
+                ++i;
+                StringWriter sw = new StringWriter();
+                t.printStackTrace(new PrintWriter(sw));
+                System.out.println("Chained exception " + i + ": " + sw);
+            }
+        }
+
+        verifyAll();
+    }
+
+    @Test
+    public void batchErrorReporting() throws SQLException {
+        final int batchSize = 3;
+
+        List<SinkRecord> records = createRecordsList(batchSize);
+
+        mockWriter.write(records);
+        SQLException exception = new SQLException("cause 1");
+        expectLastCall().andThrow(exception);
+        mockWriter.closeQuietly();
+        expectLastCall();
+        mockWriter.write(anyObject());
+        expectLastCall().andThrow(exception).times(batchSize);
+
+        DatabendSinkTask task = new DatabendSinkTask() {
+            @Override
+            void initWriter() {
+                this.writer = mockWriter;
+            }
+        };
+        task.initialize(ctx);
+        ErrantRecordReporter reporter = createMock(ErrantRecordReporter.class);
+        expect(ctx.errantRecordReporter()).andReturn(reporter);
+        expect(reporter.report(anyObject(), anyObject())).andReturn(CompletableFuture.completedFuture(null)).times(batchSize);
+        for (int i = 0; i < batchSize; i++) {
+            mockWriter.closeQuietly();
+            expectLastCall();
+        }
+        replayAll();
+
+        Map<String, String> props = setupBasicProps(0, 0);
+        task.start(props);
+        task.put(records);
+        verifyAll();
+    }
+
+    @Test
+    public void errorReportingTableAlterOrCreateException() throws SQLException {
+        List<SinkRecord> records = createRecordsList(1);
+
+        mockWriter.write(records);
+        TableAlterOrCreateException exception = new TableAlterOrCreateException("cause 1");
+        expectLastCall().andThrow(exception);
+        mockWriter.closeQuietly();
+        expectLastCall();
+        mockWriter.write(anyObject());
+        expectLastCall().andThrow(exception);
+
+        DatabendSinkTask task = new DatabendSinkTask() {
+            @Override
+            void initWriter() {
+                this.writer = mockWriter;
+            }
+        };
+        task.initialize(ctx);
+        ErrantRecordReporter reporter = createMock(ErrantRecordReporter.class);
+        expect(ctx.errantRecordReporter()).andReturn(reporter);
+        expect(reporter.report(anyObject(), anyObject())).andReturn(CompletableFuture.completedFuture(null));
+        mockWriter.closeQuietly();
+        expectLastCall();
+        replayAll();
+
+        Map<String, String> props = setupBasicProps(0, 0);
+        task.start(props);
+        task.put(records);
+        verifyAll();
+    }
+
+    @Test
+    public void oneInBatchErrorReporting() throws SQLException {
+        final int batchSize = 3;
+
+        List<SinkRecord> records = createRecordsList(batchSize);
+
+        mockWriter.write(records);
+        SQLException exception = new SQLException("cause 1");
+        expectLastCall().andThrow(exception);
+        mockWriter.closeQuietly();
+        expectLastCall();
+        mockWriter.write(anyObject());
+        expectLastCall().times(2);
+        expectLastCall().andThrow(exception);
+
+        DatabendSinkTask task = new DatabendSinkTask() {
+            @Override
+            void initWriter() {
+                this.writer = mockWriter;
+            }
+        };
+        task.initialize(ctx);
+        ErrantRecordReporter reporter = createMock(ErrantRecordReporter.class);
+        expect(ctx.errantRecordReporter()).andReturn(reporter);
+        expect(reporter.report(anyObject(), anyObject())).andReturn(CompletableFuture.completedFuture(null));
+        mockWriter.closeQuietly();
+        expectLastCall();
+        replayAll();
+
+        Map<String, String> props = setupBasicProps(0, 0);
+        task.start(props);
+        task.put(records);
+        verifyAll();
+    }
+
+    private List<SinkRecord> createRecordsList(int batchSize) {
+        List<SinkRecord> records = new ArrayList<>();
+        for (int i = 0; i < batchSize; i++) {
+            records.add(RECORD);
+        }
+        return records;
+    }
+
+    private Map<String, String> setupBasicProps(int maxRetries, long retryBackoffMs) {
+        Map<String, String> props = new HashMap<>();
+        props.put(DatabendSinkConfig.CONNECTION_URL, "jdbc:databend://databend:databend@localhost:8000/default");
+        props.put(DatabendSinkConfig.MAX_RETRIES, String.valueOf(maxRetries));
+        props.put(DatabendSinkConfig.RETRY_BACKOFF_MS, String.valueOf(retryBackoffMs));
+        return props;
     }
 }
