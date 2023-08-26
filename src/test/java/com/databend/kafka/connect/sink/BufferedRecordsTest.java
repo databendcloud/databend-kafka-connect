@@ -111,7 +111,7 @@ public class BufferedRecordsTest {
         final DatabendConnection dbDialect = DatabendClient.create(config);
         final DbStructure dbStructure = new DbStructure(dbDialect);
 
-        final TableIdentity tableId = new TableId(null, null, "dummy");
+        final TableIdentity tableId = new TableIdentity(null, null, "dummy");
         final BufferedRecords buffer = new BufferedRecords(config, tableId, dbDialect, dbStructure, databendHelper.connection);
 
         final Schema keySchemaA = SchemaBuilder.struct()
