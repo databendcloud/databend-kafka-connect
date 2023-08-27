@@ -12,6 +12,7 @@ import com.databend.kafka.connect.databendclient.ColumnDefinition.Mutability;
 import org.apache.kafka.common.config.AbstractConfig;
 import org.apache.kafka.common.config.types.Password;
 import org.apache.kafka.common.protocol.types.Field;
+import org.apache.kafka.connect.data.Date;
 import org.apache.kafka.connect.data.Decimal;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.SchemaBuilder;
@@ -983,7 +984,7 @@ public class DatabendClient implements DatabendConnection {
     ) throws SQLException {
         try (Statement statement = connection.createStatement()) {
             for (String ddlStatement : statements) {
-                statement.executeUpdate(ddlStatement);
+                statement.execute(ddlStatement);
             }
         }
         try {
@@ -1393,16 +1394,6 @@ public class DatabendClient implements DatabendConnection {
         builder.append(table);
         builder.append(" (");
         writeColumnsSpec(builder, fields);
-        if (!pkFieldNames.isEmpty()) {
-            builder.append(",");
-            builder.append(System.lineSeparator());
-            builder.append("PRIMARY KEY(");
-            builder.appendList()
-                    .delimitedBy(",")
-                    .transformedBy(SQLExpressionBuilder.quote())
-                    .of(pkFieldNames);
-            builder.append(")");
-        }
         builder.append(")");
         return builder.toString();
     }
@@ -1436,7 +1427,7 @@ public class DatabendClient implements DatabendConnection {
             if (newlines) {
                 builder.appendNewLine();
             }
-            builder.append("ADD ");
+            builder.append("ADD COLUMN ");
             writeColumnSpec(builder, field);
         };
 
@@ -1590,11 +1581,56 @@ public class DatabendClient implements DatabendConnection {
         }
     }
 
-    protected String getSqlType(SinkRecordField f) {
+    protected String getSqlTypeException(SinkRecordField f) {
         throw new ConnectException(String.format(
                 "%s (%s) type doesn't have a mapping to the SQL database column type", f.schemaName(),
                 f.schemaType()
         ));
+    }
+
+    protected String getSqlType(SinkRecordField field) {
+        if (field.schemaName() != null) {
+            switch (field.schemaName()) {
+                case Decimal.LOGICAL_NAME:
+                    return "DECIMAL";
+                case Date.LOGICAL_NAME:
+                    return "DATE";
+                case org.apache.kafka.connect.data.Time.LOGICAL_NAME:
+                    return "TIME";
+                case org.apache.kafka.connect.data.Timestamp.LOGICAL_NAME:
+                    return "TIMESTAMP";
+                default:
+                    // fall through to normal types
+            }
+        }
+        switch (field.schemaType()) {
+            case INT8:
+            case INT16:
+                return "SMALLINT";
+            case INT32:
+                return "INT";
+            case INT64:
+                return "BIGINT";
+            case FLOAT32:
+                return "REAL";
+            case FLOAT64:
+                return "DOUBLE PRECISION";
+            case BOOLEAN:
+                return "BOOLEAN";
+            case STRING:
+                return "TEXT";
+            case BYTES:
+                return "BYTEA";
+            case ARRAY:
+                SinkRecordField childField = new SinkRecordField(
+                        field.schema().valueSchema(),
+                        field.name(),
+                        field.isPrimaryKey()
+                );
+                return getSqlType(childField) + "[]";
+            default:
+                return getSqlTypeException(field);
+        }
     }
 
     /**

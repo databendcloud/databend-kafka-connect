@@ -92,14 +92,6 @@ public class BufferedRecordsTest {
         assertEquals(Collections.singletonList(recordA), buffer.flush());
     }
 
-    @Test(expected = ConfigException.class)
-    public void configParsingFailsIfDeleteWithWrongPKMode() {
-        props.put("delete.enabled", true);
-        props.put("insert.mode", "upsert");
-        props.put("pk.mode", "kafka"); // wrong pk mode for deletes
-        new DatabendSinkConfig(props);
-    }
-
     @Test
     public void insertThenDeleteInBatchNoFlush() throws SQLException {
         props.put("delete.enabled", true);

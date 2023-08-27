@@ -67,6 +67,8 @@ public class DatabendWriterTest {
     }
 
     private class MockRollbackException extends SQLException {
+        private static final long serialVersionUID = 1L;
+
         public MockRollbackException() {
             super();
         }
