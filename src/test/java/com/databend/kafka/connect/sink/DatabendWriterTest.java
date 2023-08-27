@@ -1,5 +1,6 @@
 package com.databend.kafka.connect.sink;
 
+import com.databend.jdbc.DatabendPreparedStatement;
 import com.databend.kafka.connect.databendclient.CachedConnectionProvider;
 import com.databend.kafka.connect.databendclient.DatabendConnection;
 import com.databend.kafka.connect.databendclient.TableDefinition;
@@ -110,7 +111,7 @@ public class DatabendWriterTest {
 
         PreparedStatement mockStatement = mock(PreparedStatement.class);
         when(dialect.parseTableIdentifier(any())).thenReturn(mock(TableIdentity.class));
-        when(dialect.createPreparedStatement(any(), any())).thenReturn(mockStatement);
+        when(dialect.createPreparedStatement(any(), any())).thenReturn((DatabendPreparedStatement) mockStatement);
         when(dialect.statementBinder(any(), any(), any(), any(), any(), any()))
                 .thenReturn(mock(PreparedStatementBinder.class));
         when(mockStatement.executeBatch()).thenReturn(new int[3]);

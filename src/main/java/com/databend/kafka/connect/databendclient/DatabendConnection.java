@@ -1,5 +1,6 @@
 package com.databend.kafka.connect.databendclient;
 
+import com.databend.jdbc.DatabendPreparedStatement;
 import com.databend.kafka.connect.sink.DatabendSinkConfig;
 import com.databend.kafka.connect.sink.DatabendSinkTask;
 import com.databend.kafka.connect.sink.TimestampIncrementingCriteria;
@@ -30,7 +31,7 @@ public interface DatabendConnection extends ConnectionProvider {
      * @return a new prepared statement; never null
      * @throws SQLException if there is an error with the database connection
      */
-    PreparedStatement createPreparedStatement(
+    DatabendPreparedStatement createPreparedStatement(
             Connection connection,
             String query
     ) throws SQLException;

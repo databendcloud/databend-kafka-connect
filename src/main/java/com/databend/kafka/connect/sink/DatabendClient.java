@@ -1,5 +1,6 @@
 package com.databend.kafka.connect.sink;
 
+import com.databend.jdbc.DatabendPreparedStatement;
 import com.databend.kafka.connect.databendclient.*;
 import com.databend.kafka.connect.sink.metadata.FieldsMetadata;
 import com.databend.kafka.connect.sink.metadata.SchemaPair;
@@ -208,14 +209,14 @@ public class DatabendClient implements DatabendConnection {
     }
 
     @Override
-    public PreparedStatement createPreparedStatement(
+    public DatabendPreparedStatement createPreparedStatement(
             Connection db,
             String query
     ) throws SQLException {
         glog.trace("Creating a PreparedStatement '{}'", query);
         PreparedStatement stmt = db.prepareStatement(query);
         initializePreparedStatement(stmt);
-        return stmt;
+        return (DatabendPreparedStatement) stmt;
     }
 
     /**
@@ -1235,6 +1236,7 @@ public class DatabendClient implements DatabendConnection {
                 .delimitedBy(",")
                 .transformedBy(this.columnValueVariables(definition))
                 .of(keyColumns, nonKeyColumns);
+        builder.append(")");
         return builder.toString();
     }
 

@@ -9,6 +9,7 @@ import com.databend.kafka.connect.sink.metadata.SchemaPair;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.sink.SinkRecord;
+import com.databend.jdbc.DatabendPreparedStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,8 +37,8 @@ public class BufferedRecords {
     private Schema valueSchema;
     private RecordValidator recordValidator;
     private FieldsMetadata fieldsMetadata;
-    private PreparedStatement updatePreparedStatement;
-    private PreparedStatement deletePreparedStatement;
+    private DatabendPreparedStatement updatePreparedStatement;
+    private DatabendPreparedStatement deletePreparedStatement;
     private StatementBinder updateStatementBinder;
     private StatementBinder deleteStatementBinder;
     private boolean deletesInBatch = false;

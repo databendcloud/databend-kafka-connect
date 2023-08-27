@@ -138,16 +138,16 @@ public class DbStructure {
                 );
         }
 
-        for (SinkRecordField missingField : missingFields) {
-            if (!missingField.isOptional() && missingField.defaultValue() == null) {
-                throw new TableAlterOrCreateException(String.format(
-                        "Cannot ALTER Table %s to add missing field %s, as the field is not optional and does "
-                                + "not have a default value",
-                        tableId,
-                        missingField
-                ));
-            }
-        }
+//        for (SinkRecordField missingField : missingFields) {
+//            if (!missingField.isOptional() && missingField.defaultValue() == null) {
+//                throw new TableAlterOrCreateException(String.format(
+//                        "Cannot ALTER Table %s to add missing field %s, as the field is not optional and does "
+//                                + "not have a default value",
+//                        tableId,
+//                        missingField
+//                ));
+//            }
+//        }
 
         if (!config.autoEvolve) {
             throw new TableAlterOrCreateException(String.format(

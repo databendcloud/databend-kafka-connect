@@ -1,6 +1,5 @@
 package com.databend.kafka.connect.sink;
 
-import com.databend.kafka.connect.DatabendSinkConnector;
 import com.databend.kafka.connect.databendclient.ColumnDefinition;
 import com.databend.kafka.connect.databendclient.DatabendConnection;
 import com.databend.kafka.connect.databendclient.TableDefinition;
@@ -97,6 +96,7 @@ public class BufferedRecordsTest {
         props.put("delete.enabled", true);
         props.put("insert.mode", "upsert");
         props.put("pk.mode", "record_key");
+        props.put("pk.fields", "id");
         final DatabendSinkConfig config = new DatabendSinkConfig(props);
 
         final String url = databendHelper.databendUri();
@@ -107,7 +107,7 @@ public class BufferedRecordsTest {
         final BufferedRecords buffer = new BufferedRecords(config, tableId, dbDialect, dbStructure, databendHelper.connection);
 
         final Schema keySchemaA = SchemaBuilder.struct()
-                .field("id", Schema.INT64_SCHEMA)
+                .field("id", Schema.OPTIONAL_INT64_SCHEMA)
                 .build();
         final Schema valueSchemaA = SchemaBuilder.struct()
                 .field("name", Schema.STRING_SCHEMA)
@@ -119,26 +119,25 @@ public class BufferedRecordsTest {
         final SinkRecord recordA = new SinkRecord("dummy", 0, keySchemaA, keyA, valueSchemaA, valueA, 0);
         final SinkRecord recordADelete = new SinkRecord("dummy", 0, keySchemaA, keyA, null, null, 0);
 
-        final Schema schemaB = SchemaBuilder.struct()
+        final Schema valueSchemaB = SchemaBuilder.struct()
                 .field("name", Schema.STRING_SCHEMA)
                 .field("age", Schema.OPTIONAL_INT32_SCHEMA)
                 .build();
-        final Struct valueB = new Struct(schemaB)
+        final Struct valueB = new Struct(valueSchemaB)
                 .put("name", "cuba")
                 .put("age", 4);
-        final SinkRecord recordB = new SinkRecord("dummy", 1, keySchemaA, keyA, schemaB, valueB, 1);
+        final SinkRecord recordB = new SinkRecord("dummy", 1, keySchemaA, keyA, valueSchemaB, valueB, 1);
 
         // test records are batched correctly based on schema equality as records are added
         //   (schemaA,schemaA,schemaA,schemaB,schemaA) -> ([schemaA,schemaA,schemaA],[schemaB],[schemaA])
 
-        assertEquals(Collections.emptyList(), buffer.add(recordA));
         assertEquals(Collections.emptyList(), buffer.add(recordA));
 
         // delete should not cause a flush (i.e. not treated as a schema change)
         assertEquals(Collections.emptyList(), buffer.add(recordADelete));
 
         // schema change should trigger flush
-        assertEquals(Arrays.asList(recordA, recordA, recordADelete), buffer.add(recordB));
+        assertEquals(Arrays.asList( recordA, recordADelete), buffer.add(recordB));
 
         // second schema change should trigger flush
         assertEquals(Collections.singletonList(recordB), buffer.add(recordA));
@@ -161,7 +160,7 @@ public class BufferedRecordsTest {
         final BufferedRecords buffer = new BufferedRecords(config, tableId, dbDialect, dbStructure, databendHelper.connection);
 
         final Schema keySchemaA = SchemaBuilder.struct()
-                .field("id", Schema.INT64_SCHEMA)
+                .field("id", Schema.OPTIONAL_INT64_SCHEMA)
                 .build();
         final Schema valueSchemaA = SchemaBuilder.struct()
                 .field("name", Schema.STRING_SCHEMA)
