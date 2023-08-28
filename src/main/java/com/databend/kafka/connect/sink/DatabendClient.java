@@ -98,7 +98,7 @@ public class DatabendClient implements DatabendConnection {
         if (config instanceof DatabendSinkConfig) {
             timeZone = ((DatabendSinkConfig) config).timeZone;
         } else {
-            timeZone = TimeZone.getTimeZone(ZoneOffset.UTC);
+            timeZone = TimeZone.getTimeZone(ZoneOffset.systemDefault());
         }
     }
 
