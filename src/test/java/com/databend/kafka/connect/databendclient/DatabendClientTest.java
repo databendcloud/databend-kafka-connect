@@ -175,7 +175,21 @@ public class DatabendClientTest {
 
     @Test
     public void shouldBuildDeleteStatement() throws SQLException {
-
+        TableIdentity tableId = new TableIdentity(null, null, "myTable");
+        List<ColumnDefinition> colDefs = new ArrayList<>();
+        for (int i = 0; i < 2; i++) {
+            colDefs.add(mock(ColumnDefinition.class));
+        }
+        when(colDefs.get(0).type()).thenReturn(String.valueOf(Types.INTEGER));
+        when(colDefs.get(0).id()).thenReturn(new ColumnIdentity(tableId, "id1"));
+        when(colDefs.get(0).isPrimaryKey()).thenReturn(true);
+        when(colDefs.get(1).type()).thenReturn(String.valueOf(Types.INTEGER));
+        when(colDefs.get(1).id()).thenReturn(new ColumnIdentity(tableId, "id2"));
+        when(colDefs.get(1).isPrimaryKey()).thenReturn(true);
+        assertEquals(
+                "DELETE FROM \"myTable\" WHERE \"id1\" = ? AND \"id2\" = ?",
+                dialect.buildDeleteStatement(tableId, pkColumns)
+        );
     }
 }
 
