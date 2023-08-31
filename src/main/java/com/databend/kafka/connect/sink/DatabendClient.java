@@ -1357,8 +1357,7 @@ public class DatabendClient implements DatabendConnection {
                 case org.apache.kafka.connect.data.Date.LOGICAL_NAME:
                     statement.setDate(
                             index,
-                            new java.sql.Date(((java.util.Date) value).getTime()),
-                            DateTimeUtils.getTimeZoneCalendar(timeZone)
+                            new java.sql.Date(((java.util.Date) value).getTime())
                     );
                     return true;
                 case Decimal.LOGICAL_NAME:
@@ -1367,8 +1366,7 @@ public class DatabendClient implements DatabendConnection {
                 case org.apache.kafka.connect.data.Time.LOGICAL_NAME:
                     statement.setTime(
                             index,
-                            new java.sql.Time(((java.util.Date) value).getTime()),
-                            DateTimeUtils.getTimeZoneCalendar(timeZone)
+                            new java.sql.Time(((java.util.Date) value).getTime())
                     );
                     return true;
                 case org.apache.kafka.connect.data.Timestamp.LOGICAL_NAME:
