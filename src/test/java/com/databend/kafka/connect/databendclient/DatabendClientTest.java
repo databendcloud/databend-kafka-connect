@@ -1,6 +1,9 @@
-package com.databend.kafka.connect.sink;
+package com.databend.kafka.connect.databendclient;
 
 import com.databend.kafka.connect.databendclient.*;
+import com.databend.kafka.connect.sink.DatabendClient;
+import com.databend.kafka.connect.sink.DatabendHelper;
+import com.databend.kafka.connect.sink.DatabendSinkConfig;
 import com.databend.kafka.connect.sink.metadata.SinkRecordField;
 import org.apache.kafka.connect.data.*;
 import org.apache.kafka.connect.data.Date;
@@ -18,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class DatabendConnectionTest {
+public class DatabendClientTest {
     protected TableIdentity tableId;
     protected ColumnIdentity columnPK1;
     protected ColumnIdentity columnPK2;
@@ -177,3 +180,4 @@ public class DatabendConnectionTest {
 
     }
 }
+
