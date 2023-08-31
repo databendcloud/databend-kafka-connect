@@ -1,6 +1,5 @@
 package com.databend.kafka.connect.databendclient;
 
-import com.databend.kafka.connect.databendclient.*;
 import com.databend.kafka.connect.sink.DatabendClient;
 import com.databend.kafka.connect.sink.DatabendHelper;
 import com.databend.kafka.connect.sink.DatabendSinkConfig;
@@ -12,7 +11,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.sql.DriverManager;
-import java.sql.JDBCType;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
