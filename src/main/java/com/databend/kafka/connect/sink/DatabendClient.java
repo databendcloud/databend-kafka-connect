@@ -1131,12 +1131,12 @@ public class DatabendClient implements DatabendConnection {
         SQLExpressionBuilder builder = expressionBuilder();
         builder.append("INSERT INTO ");
         builder.append(table);
-        builder.append("(");
+        builder.append(" (");
         builder.appendList()
                 .delimitedBy(",")
                 .transformedBy(SQLExpressionBuilder.columnNames())
                 .of(keyColumns, nonKeyColumns);
-        builder.append(") VALUES(");
+        builder.append(") VALUES (");
         builder.appendMultiple(",", "?", keyColumns.size() + nonKeyColumns.size());
         builder.append(")");
         return builder.toString();
