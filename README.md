@@ -20,7 +20,7 @@ The detail introduction docs available in [docs page](./docs/docs.md)
       configuration
       in [application.properties.example](src/main/resources/conf/application.properties.example)
     - config your source connect such as kafka mysql connector
-    - run kafka with connectors: `bin/connect-standalone.sh config/connect-standalone.properties config/databend.properties config/mysql.properties`
+    - Start or restart the Kafka Connect workers.: `bin/connect-standalone.sh config/connect-standalone.properties config/databend.properties config/mysql.properties`
 
 # Contributing
 
