@@ -22,6 +22,8 @@ The detail introduction docs available in [docs page](./docs/docs.md)
     - config your source connect such as kafka mysql connector
     - Start or restart the Kafka Connect workers.: `bin/connect-standalone.sh config/connect-standalone.properties config/databend.properties config/mysql.properties`
 
+More details about configure kafka connector, please read [Configure Self-Managed Connectors](https://docs.confluent.io/platform/current/connect/configuring.html).
+
 # Contributing
 
 You are warmly welcome to hack on debezium-server-databend. We have prepared a guide [CONTRIBUTING.md](./CONTRIBUTING.md).
