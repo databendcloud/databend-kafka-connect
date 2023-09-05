@@ -96,7 +96,7 @@ public class DatabendSinkConfig extends AbstractConfig {
     private static final String RETRY_BACKOFF_MS_DISPLAY = "Retry Backoff (millis)";
 
     public static final String BATCH_SIZE = "batch.size";
-    private static final int BATCH_SIZE_DEFAULT = 1;
+    private static final int BATCH_SIZE_DEFAULT = 10;
     private static final String BATCH_SIZE_DOC =
             "Specifies how many records to attempt to batch together for insertion into the destination"
                     + " table, when possible.";
@@ -113,7 +113,7 @@ public class DatabendSinkConfig extends AbstractConfig {
     private static final String AUTO_CREATE_DEFAULT = "false";
     private static final String AUTO_CREATE_DOC =
             "Whether to automatically create the destination table based on record schema if it is "
-                    + "found to be missing by issuing ``CREATE``.";
+                    + "found to be missing by isusing ``CREATE``.";
     private static final String AUTO_CREATE_DISPLAY = "Auto-Create";
 
     public static final String AUTO_EVOLVE = "auto.evolve";
@@ -144,7 +144,7 @@ public class DatabendSinkConfig extends AbstractConfig {
     private static final String PK_FIELDS_DISPLAY = "Primary Key Fields";
 
     public static final String PK_MODE = "pk.mode";
-    private static final String PK_MODE_DEFAULT = "none";
+    private static final String PK_MODE_DEFAULT = "record_value";
     private static final String PK_MODE_DOC =
             "The primary key mode, also refer to ``" + PK_FIELDS + "`` documentation for interplay. "
                     + "Supported modes are:\n"
