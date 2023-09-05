@@ -109,6 +109,11 @@ public class DatabendClient implements DatabendConnection {
 
     @Override
     public Connection getConnection() throws SQLException {
+        try {
+            Class.forName("com.databend.jdbc.DatabendDriver");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
         String username = config.getString(DatabendSinkConfig.CONNECTION_USER);
         Password dbPassword = config.getPassword(DatabendSinkConfig.CONNECTION_PASSWORD);
         Properties properties = new Properties();
@@ -253,7 +258,7 @@ public class DatabendClient implements DatabendConnection {
         }
         assert parts.size() >= 2;
         if (useCatalog()) {
-            return new TableIdentity(parts.get(0), null, parts.get(1));
+            return new TableIdentity(parts.get(0), parts.get(0), parts.get(1));
         }
         return new TableIdentity(null, parts.get(0), parts.get(1));
     }
@@ -442,9 +447,10 @@ public class DatabendClient implements DatabendConnection {
         )) {
             final boolean exists = rs.next();
             glog.info(
-                    "Using {} dialect {} {} {}",
+                    "Using {} dialect {} {} {} {}",
                     this,
                     tableTypeDisplay,
+                    tableId.schemaName(),
                     tableId,
                     exists ? "present" : "absent"
             );
@@ -705,7 +711,7 @@ public class DatabendClient implements DatabendConnection {
         DatabaseMetaData metadata = connection.getMetaData();
         String[] tableTypes = tableTypes(metadata, this.tableTypes);
         String tableTypeDisplay = displayableTableTypes(tableTypes, "/");
-        glog.info("Checking {} dialect for type of {} {}", this, tableTypeDisplay, tableId);
+        glog.info("Checking {} dialect for type of {} {} {}", this, tableTypeDisplay, tableId.schemaName(), tableId);
         try (ResultSet rs = connection.getMetaData().getTables(
                 tableId.catalogName(),
                 tableId.schemaName(),
@@ -716,7 +722,10 @@ public class DatabendClient implements DatabendConnection {
                 //final String catalogName = rs.getString(1);
                 //final String schemaName = rs.getString(2);
                 //final String tableName = rs.getString(3);
-                final String tableType = rs.getString(4);
+                String tableType = rs.getString(4);
+                if (tableType.equalsIgnoreCase("base table")) {
+                    tableType = "TABLE";
+                }
                 try {
                     return TableType.get(tableType);
                 } catch (IllegalArgumentException e) {

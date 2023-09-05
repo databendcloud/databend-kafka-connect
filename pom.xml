@@ -62,7 +62,7 @@
         <project.package.home>target/${project.artifactId}-${project.version}-package</project.package.home>
         <maven.release.plugin.version>3.9.1</maven.release.plugin.version>
         <testcontainers.version>1.17.3</testcontainers.version>
-        <databend.jdbc.driver.version>0.1.0</databend.jdbc.driver.version>
+        <databend.jdbc.driver.version>0.1.2</databend.jdbc.driver.version>
     </properties>
 
 <!--    <repositories>-->
@@ -271,7 +271,7 @@
         <dependency>
             <groupId>com.databend</groupId>
             <artifactId>databend-jdbc</artifactId>
-            <version>0.1.0</version>
+            <version>0.1.2</version>
         </dependency>
     </dependencies>
 

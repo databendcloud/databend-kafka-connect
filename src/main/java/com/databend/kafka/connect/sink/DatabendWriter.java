@@ -64,9 +64,9 @@ public class DatabendWriter {
                 buffer.flush();
                 buffer.close();
             }
-//            connection.commit();
+            connection.commit();
         } catch (SQLException | TableAlterOrCreateException e) {
-            e.addSuppressed(e);
+//            e.addSuppressed(e);
             throw e;
         }
     }

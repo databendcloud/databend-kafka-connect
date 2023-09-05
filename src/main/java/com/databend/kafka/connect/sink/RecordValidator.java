@@ -10,7 +10,8 @@ import static com.databend.kafka.connect.sink.DatabendSinkConfig.PrimaryKeyMode.
 @FunctionalInterface
 public interface RecordValidator {
 
-    RecordValidator NO_OP = (record) -> { };
+    RecordValidator NO_OP = (record) -> {
+    };
 
     void validate(SinkRecord record);
 
@@ -70,10 +71,11 @@ public interface RecordValidator {
             }
             throw new ConnectException(
                     String.format(
-                            "Databend Sink connector is configured with '%s=%s' and '%s=%s' and therefore requires "
+                            "record is %s .Databend Sink connector is configured with '%s=%s' and '%s=%s' and therefore requires "
                                     + "records with a non-null Struct value and non-null Struct schema, "
                                     + "but found record at (topic='%s',partition=%d,offset=%d,timestamp=%d) "
                                     + "with a %s value and %s value schema.",
+                            record.toString(),
                             DatabendSinkConfig.DELETE_ENABLED,
                             config.deleteEnabled,
                             DatabendSinkConfig.PK_FIELDS,
@@ -99,10 +101,11 @@ public interface RecordValidator {
             }
             throw new ConnectException(
                     String.format(
-                            "Databend Sink connector is configured with '%s=%s' and '%s=%s' and therefore requires "
+                            "Record is %s .Databend Sink connector is configured with '%s=%s' and '%s=%s' and therefore requires "
                                     + "records with a non-null key and non-null Struct or primitive key schema, "
                                     + "but found record at (topic='%s',partition=%d,offset=%d,timestamp=%d) "
                                     + "with a %s key and %s key schema.",
+                            record.toString(),
                             DatabendSinkConfig.DELETE_ENABLED,
                             config.deleteEnabled,
                             DatabendSinkConfig.PK_FIELDS,
