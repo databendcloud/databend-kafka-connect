@@ -212,8 +212,8 @@ public class FieldsMetadata {
                         final Field keyField = keySchema.field(fieldName);
                         if (keyField == null) {
                             throw new ConnectException(String.format(
-                                    "PK mode for table '%s' is %s with configured PK fields %s, but record key "
-                                            + "schema does not contain field: %s",
+                                    "KeySchema is %s. PK mode for table '%s' is %s with configured PK fields %s, but record key "
+                                            + "schema does not contain field: %s", keySchema.toString(),
                                     tableName, DatabendSinkConfig.PrimaryKeyMode.RECORD_KEY, configuredPkFields, fieldName
                             ));
                         }
@@ -254,8 +254,8 @@ public class FieldsMetadata {
             for (String fieldName : configuredPkFields) {
                 if (valueSchema.field(fieldName) == null) {
                     throw new ConnectException(String.format(
-                            "PK mode for table '%s' is %s with configured PK fields %s, but record value "
-                                    + "schema does not contain field: %s",
+                            "ValueSchema is %s .PK mode for table '%s' is %s with configured PK fields %s, but record value "
+                                    + "schema does not contain field: %s", valueSchema.toString(),
                             tableName, DatabendSinkConfig.PrimaryKeyMode.RECORD_VALUE, configuredPkFields, fieldName
                     ));
                 }
