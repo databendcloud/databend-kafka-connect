@@ -7,20 +7,17 @@
 <suppressions>
 
     <suppress checks="CyclomaticComplexity"
-              files="(BufferedRecords|DataConverter|DatabendConnection|FieldsMetadata|PreparedStatementBinder|TimestampIncrementingTableQuerier|GenericDatabaseDialect|TableIdentity|ColumnDefinition|DatabendSinkTask).java"/>
+              files="(BufferedRecords|DataConverter|DatabendConnection|FieldsMetadata|PreparedStatementBinder|TimestampIncrementingTableQuerier|TableIdentity|ColumnDefinition|DatabendSinkTask).java"/>
 
     <suppress checks="ClassDataAbstractionCoupling"
-              files="(DbDialect|JdbcSourceTask|GenericDatabaseDialect).java"/>
+              files="(DatabendClient|GenericDatabaseDialect).java"/>
 
     <suppress checks="NPathComplexity"
-              files="(BufferedRecords|DataConverter|FieldsMetadata|GenericDatabaseDialect).java"/>
+              files="(BufferedRecords|DataConverter|FieldsMetadata|DatabendConnection).java"/>
 
     <suppress checks="JavaNCSS"
-              files="(DataConverter|FieldsMetadata|GenericDatabaseDialect).java"/>
-
-    <suppress checks="MethodLength"
-              files="(DataConverter|GenericDatabaseDialect|JdbcSourceTask).java"/>
+              files="(FieldsMetadata|DatabendConnection).java"/>
 
     <suppress checks="ParameterNumber"
-              files="(ColumnDefinition|GenericDatabaseDialect|TimestampIncrementingTableQuerier).java"/>
+              files="(ColumnDefinition|DatabendConnection|TimestampIncrementingTableQuerier).java"/>
 </suppressions>
