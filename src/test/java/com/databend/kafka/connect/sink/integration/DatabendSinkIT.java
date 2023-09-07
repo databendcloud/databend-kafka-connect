@@ -56,6 +56,11 @@ public class DatabendSinkIT extends BaseConnectorIT {
                 "jdbc:databend://localhost:8000",
                 "databend",
                 "databend");
+
+        try (Statement s = connection.createStatement()) {
+            s.execute("DROP TABLE measurements;");
+        }
+
         try (Statement s = connection.createStatement()) {
             s.execute("CREATE TABLE " + MEASUREMENTS + " ("
                     + "    key             int not null,"
@@ -66,6 +71,7 @@ public class DatabendSinkIT extends BaseConnectorIT {
                     + ");");
         }
     }
+
 
     @After
     public void tearDown() throws SQLException {
