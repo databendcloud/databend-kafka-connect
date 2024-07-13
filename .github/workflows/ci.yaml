@@ -5,7 +5,7 @@ on:
     branches: [main]
 
 jobs:
-  build-datax:
+  build-connect:
     runs-on: [self-hosted, X64, Linux, 8c16g]
     steps:
       - name: Checkout
