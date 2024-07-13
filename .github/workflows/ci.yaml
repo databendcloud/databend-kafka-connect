@@ -1,4 +1,4 @@
-name: Cron Datax test
+name: TEST CI
 
 on:
   pull_request:
