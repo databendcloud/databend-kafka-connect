@@ -439,6 +439,7 @@ public class DatabendClient implements DatabendConnection {
         String[] tableTypes = tableTypes(metadata, this.tableTypes);
         String tableTypeDisplay = displayableTableTypes(tableTypes, "/");
         glog.info("Checking {} dialect for existence of {} {}", this, tableTypeDisplay, tableId);
+        glog.info("catalogName is {}, schemaName is {}, tableName is {}", tableId.catalogName(),tableId.schemaName(), tableId.tableName());
         try (ResultSet rs = connection.getMetaData().getTables(
                 tableId.catalogName(),
                 tableId.schemaName(),
@@ -1399,7 +1400,7 @@ public class DatabendClient implements DatabendConnection {
         SQLExpressionBuilder builder = expressionBuilder();
 
         final List<String> pkFieldNames = extractPrimaryKeyFieldNames(fields);
-        builder.append("CREATE TABLE ");
+        builder.append("CREATE TABLE IF NOT EXISTS ");
         builder.append(table);
         builder.append(" (");
         writeColumnsSpec(builder, fields);

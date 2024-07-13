@@ -41,7 +41,9 @@ public class TableDefinitions {
     ) throws SQLException {
         TableDefinition dbTable = cache.get(tableId);
         if (dbTable == null) {
+            log.info("Table {} not found in cache; checking database", tableId);
             if (dialect.tableExists(connection, tableId)) {
+                log.info("Table {} exists in database", tableId);
                 dbTable = dialect.describeTable(connection, tableId);
                 if (dbTable != null) {
                     log.info("Setting metadata for table {} to {}", tableId, dbTable);

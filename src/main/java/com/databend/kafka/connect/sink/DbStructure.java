@@ -111,6 +111,8 @@ public class DbStructure {
             final int maxRetries
     ) throws SQLException, TableAlterOrCreateException {
         final TableDefinition tableDefn = tableDefns.get(connection, tableId);
+        log.info("tableDefn: {}", tableDefn);
+        log.info("Amending table {} with fieldsMetadata: {}", tableId, fieldsMetadata);
 
         final Set<SinkRecordField> missingFields = missingFields(
                 fieldsMetadata.allFields.values(),

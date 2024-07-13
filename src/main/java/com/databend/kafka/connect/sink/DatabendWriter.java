@@ -46,9 +46,17 @@ public class DatabendWriter {
     void write(final Collection<SinkRecord> records)
             throws SQLException, TableAlterOrCreateException {
         final Connection connection = cachedConnectionProvider.getConnection();
+        log.info("DatabendWriter Writing {} records", records.size());
+        log.info("DatabendWriter Writing records is: {}", records);
         try {
             final Map<TableIdentity, BufferedRecords> bufferByTable = new HashMap<>();
             for (SinkRecord record : records) {
+                log.info("DatabendWriter Writing record keySchema is: {}", record.keySchema());
+                log.info("DatabendWriter Writing record valueSchema is: {}", record.valueSchema().fields());
+                log.info("DatabendWriter Writing record key is: {}", record.key());
+                log.info("DatabendWriter Writing record value is: {}", record.value());
+                log.info("DatabendWriter Writing record topic is: {}", record.topic());
+                log.info("DatabendWriter Writing record timestamp is: {}", record.timestamp());
                 final TableIdentity tableId = destinationTable(record.topic());
                 BufferedRecords buffer = bufferByTable.get(tableId);
                 if (buffer == null) {
@@ -64,7 +72,7 @@ public class DatabendWriter {
                 buffer.flush();
                 buffer.close();
             }
-            connection.commit();
+//            connection.commit();
         } catch (SQLException | TableAlterOrCreateException e) {
 //            e.addSuppressed(e);
             throw e;

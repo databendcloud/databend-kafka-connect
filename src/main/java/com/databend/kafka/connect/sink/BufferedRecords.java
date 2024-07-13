@@ -59,6 +59,7 @@ public class BufferedRecords {
     }
 
     public List<SinkRecord> add(SinkRecord record) throws SQLException, TableAlterOrCreateException {
+        log.info("Adding record to buffer: {}", record);
         recordValidator.validate(record);
         final List<SinkRecord> flushed = new ArrayList<>();
 
