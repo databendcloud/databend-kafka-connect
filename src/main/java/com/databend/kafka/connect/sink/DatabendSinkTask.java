@@ -28,6 +28,9 @@ public class DatabendSinkTask extends SinkTask {
 
     boolean shouldTrimSensitiveLogs;
 
+    public DatabendSinkTask() {
+    }
+
     @Override
     public void start(final Map<String, String> props) {
         log.info("Starting Databend Sink task");
@@ -54,18 +57,40 @@ public class DatabendSinkTask extends SinkTask {
     }
 
     @Override
+    public void open(final Collection<TopicPartition> partitions) {
+        // This method is called when the task's assigned partitions are changed.
+        // You can initialize resources related to the assigned partitions here.
+        // For now, we are just logging the assigned partitions.
+
+        log.info("Opening Databend Sink task for the following partitions:");
+        for (TopicPartition partition : partitions) {
+            log.info("Partition: {}", partition);
+        }
+    }
+
+    @Override
+    public Map<TopicPartition, OffsetAndMetadata> preCommit(Map<TopicPartition, OffsetAndMetadata> offsets) throws RetriableException {
+        // You can add any processing you need to do before committing the offsets here.
+        // For now, we are just returning the offsets as is.
+        return offsets;
+    }
+
+    @Override
     public void put(Collection<SinkRecord> records) {
+        log.info("###: {}", records);
+        log.info("Received {} records", records.size());
         if (records.isEmpty()) {
             return;
         }
         final SinkRecord first = records.iterator().next();
         final int recordsCount = records.size();
-        log.debug(
+        log.info(
                 "Received {} records. First record kafka coordinates:({}-{}-{}). Writing them to the "
                         + "database...",
                 recordsCount, first.topic(), first.kafkaPartition(), first.kafkaOffset()
         );
         try {
+            log.info("Writing {} records", records.size());
             writer.write(records);
         } catch (TableAlterOrCreateException tace) {
             if (reporter != null) {

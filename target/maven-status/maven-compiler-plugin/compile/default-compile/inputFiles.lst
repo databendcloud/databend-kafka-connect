@@ -8,6 +8,8 @@
 /Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/util/TimeZoneValidator.java
 /Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/sink/DatabendWriter.java
 /Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/databendclient/ConnectionProvider.java
+/Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/sink/records/DatabendJsonSchema.java
+/Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/sink/records/DatabendRecordContent.java
 /Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/util/QuoteWay.java
 /Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/util/StringUtils.java
 /Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/sink/BufferedRecords.java
@@ -15,13 +17,16 @@
 /Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/sink/metadata/FieldsMetadata.java
 /Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/DatabendSinkConnector.java
 /Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/databendclient/DatabendConnection.java
+/Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/sink/records/DatabendAvroConverter.java
 /Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/databendclient/TableIdentity.java
 /Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/sink/DatabendSinkTask.java
 /Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/sink/DatabendClient.java
 /Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/util/Version.java
+/Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/sink/records/DatabendConverter.java
 /Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/sink/PreparedStatementBinder.java
 /Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/sink/TableAlterOrCreateException.java
 /Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/databendclient/ColumnDefinition.java
+/Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/sink/records/AvroConverterConfig.java
 /Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/util/BytesUtil.java
 /Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/databendclient/TableType.java
 /Users/hanshanjie/git-works/databend-kafka-connect/src/main/java/com/databend/kafka/connect/sink/RecordValidator.java

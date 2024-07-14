@@ -4,6 +4,8 @@ import com.databend.kafka.connect.sink.DatabendSinkConfig;
 import org.apache.kafka.connect.data.Field;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.errors.ConnectException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -12,6 +14,7 @@ public class FieldsMetadata {
     public final Set<String> keyFieldNames;
     public final Set<String> nonKeyFieldNames;
     public final Map<String, SinkRecordField> allFields;
+    private static final Logger LOGGER = LoggerFactory.getLogger(DatabendSinkConfig.class);
 
     // visible for testing
     public FieldsMetadata(
@@ -86,6 +89,7 @@ public class FieldsMetadata {
         }
 
         final Set<String> nonKeyFieldNames = new LinkedHashSet<>();
+        LOGGER.info("@@Value schema is: {}", valueSchema);
         if (valueSchema != null) {
             for (Field field : valueSchema.fields()) {
                 if (keyFieldNames.contains(field.name())) {
@@ -246,6 +250,9 @@ public class FieldsMetadata {
                     DatabendSinkConfig.PrimaryKeyMode.RECORD_VALUE)
             );
         }
+
+        LOGGER.info("Value schema is: {}", valueSchema.toString());
+        LOGGER.info("Value fields are: {}", valueSchema.fields());
         if (configuredPkFields.isEmpty()) {
             for (Field keyField : valueSchema.fields()) {
                 keyFieldNames.add(keyField.name());
