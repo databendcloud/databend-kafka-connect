@@ -1,0 +1,13 @@
+/Users/hanshanjie/git-works/databend-kafka-connect/src/test/java/com/databend/kafka/connect/DatabendSinkConnectorTest.java
+/Users/hanshanjie/git-works/databend-kafka-connect/src/test/java/com/databend/kafka/connect/sink/integration/BaseConnectorIT.java
+/Users/hanshanjie/git-works/databend-kafka-connect/src/test/java/com/databend/kafka/connect/sink/DbStructureTest.java
+/Users/hanshanjie/git-works/databend-kafka-connect/src/test/java/com/databend/kafka/connect/databendclient/DatabendClientTest.java
+/Users/hanshanjie/git-works/databend-kafka-connect/src/test/java/com/databend/kafka/connect/sink/integration/DatabendSinkIT.java
+/Users/hanshanjie/git-works/databend-kafka-connect/src/test/java/com/databend/kafka/connect/sink/metadata/FieldsMetadataTest.java
+/Users/hanshanjie/git-works/databend-kafka-connect/src/test/java/com/databend/kafka/connect/sink/DatabendHelper.java
+/Users/hanshanjie/git-works/databend-kafka-connect/src/test/java/com/databend/kafka/connect/sink/DatabendWriterTest.java
+/Users/hanshanjie/git-works/databend-kafka-connect/src/test/java/com/databend/kafka/connect/sink/DatabendSinkTaskTest.java
+/Users/hanshanjie/git-works/databend-kafka-connect/src/test/java/com/databend/kafka/connect/sink/DatabendHelperTest.java
+/Users/hanshanjie/git-works/databend-kafka-connect/src/test/java/com/databend/kafka/connect/sink/BufferedRecordsTest.java
+/Users/hanshanjie/git-works/databend-kafka-connect/src/test/java/com/databend/kafka/connect/sink/DatabendSinkConfigTest.java
+/Users/hanshanjie/git-works/databend-kafka-connect/src/test/java/com/databend/kafka/connect/sink/PreparedStatementBinderTest.java
