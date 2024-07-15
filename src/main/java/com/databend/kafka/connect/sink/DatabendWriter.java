@@ -52,7 +52,9 @@ public class DatabendWriter {
             final Map<TableIdentity, BufferedRecords> bufferByTable = new HashMap<>();
             for (SinkRecord record : records) {
                 log.info("DatabendWriter Writing record keySchema is: {}", record.keySchema());
-                log.info("DatabendWriter Writing record valueSchema is: {}", record.valueSchema().fields());
+                if (record.valueSchema() != null) {
+                    log.info("DatabendWriter Writing record valueSchema is: {}", record.valueSchema().fields());
+                }
                 log.info("DatabendWriter Writing record key is: {}", record.key());
                 log.info("DatabendWriter Writing record value is: {}", record.value());
                 log.info("DatabendWriter Writing record topic is: {}", record.topic());
