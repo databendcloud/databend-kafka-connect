@@ -25,7 +25,6 @@ public class DatabendRecordContent {
      * <p>If we change this logic in future, we need to carefully modify how we handle tombstone
      * records.
      *
-     * <p>@see SnowflakeSinkServiceV1#shouldSkipNullValue(SinkRecord)
      */
     public DatabendRecordContent() {
         content = new JsonNode[1];
