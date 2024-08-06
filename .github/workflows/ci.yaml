@@ -12,7 +12,7 @@ on:
 
 jobs:
   build-connect:
-    runs-on: [self-hosted, X64, Linux, 8c16g]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
