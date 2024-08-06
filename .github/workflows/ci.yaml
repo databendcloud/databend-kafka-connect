@@ -13,6 +13,21 @@ on:
 jobs:
   build-connect:
     runs-on: ubuntu-latest
+    services:
+      databend:
+        image: datafuselabs/databend
+        env:
+          QUERY_DEFAULT_USER: databend
+          QUERY_DEFAULT_PASSWORD: databend
+          MINIO_ENABLED: true
+        # options: >-
+        #   --health-cmd "curl -fs http://localhost:8000/v1/health || exit 1"
+        #   --health-interval 10s
+        #   --health-timeout 5s
+        #   --health-retries 5
+        ports:
+          - 8000:8000
+          - 9000:9000
     steps:
       - name: Checkout
         uses: actions/checkout@v3
