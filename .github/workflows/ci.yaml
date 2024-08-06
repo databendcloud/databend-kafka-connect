@@ -1,8 +1,14 @@
 name: TEST CI
 
 on:
+  push:
+    branches:
+      - main
+      - master
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - master
 
 jobs:
   build-connect:
