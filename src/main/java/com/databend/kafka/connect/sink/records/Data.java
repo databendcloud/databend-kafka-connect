@@ -26,5 +26,23 @@ public class Data {
         }
         return object.toString();
     }
+    public String getJsonType() {
+        switch (fieldType) {
+            case INT8:
+            case INT16:
+            case INT32:
+            case INT64:
+                return "integer";
+            case FLOAT32:
+            case FLOAT64:
+                return "number";
+            case BOOLEAN:
+                return "boolean";
+            case STRING:
+                return "string";
+            default:
+                return "string";
+        }
+    }
 }
 

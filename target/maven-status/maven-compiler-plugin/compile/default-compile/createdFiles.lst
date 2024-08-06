@@ -56,6 +56,7 @@ com/databend/kafka/connect/sink/metadata/SchemaPair.class
 com/databend/kafka/connect/util/Version.class
 com/databend/kafka/connect/sink/DbStructure.class
 com/databend/kafka/connect/sink/DatabendSinkConfig.class
+com/databend/kafka/connect/sink/records/Data$1.class
 com/databend/kafka/connect/sink/records/StructToJsonMap.class
 com/databend/kafka/connect/databendclient/ColumnIdentity.class
 com/databend/kafka/connect/sink/DbStructure$1.class
@@ -68,5 +69,6 @@ com/databend/kafka/connect/databendclient/SQLExpressionBuilder.class
 com/databend/kafka/connect/databendclient/SQLExpressionBuilder$Expressable.class
 com/databend/kafka/connect/databendclient/TableDefinition.class
 com/databend/kafka/connect/sink/DatabendClient$1.class
+com/databend/kafka/connect/sink/DatabendWriter$2.class
 com/databend/kafka/connect/sink/TimestampIncrementingCriteria.class
 com/databend/kafka/connect/sink/records/DatabendRecordContent.class
