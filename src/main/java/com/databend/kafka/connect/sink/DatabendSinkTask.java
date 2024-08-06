@@ -1,6 +1,8 @@
 package com.databend.kafka.connect.sink;
 
 import com.databend.kafka.connect.databendclient.DatabendConnection;
+import com.databend.kafka.connect.sink.records.Record;
+import com.databend.kafka.connect.sink.records.SchemaType;
 import com.databend.kafka.connect.util.Version;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
@@ -15,7 +17,9 @@ import org.slf4j.LoggerFactory;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class DatabendSinkTask extends SinkTask {
     private static final Logger log = LoggerFactory.getLogger(DatabendSinkConfig.class);
@@ -75,6 +79,10 @@ public class DatabendSinkTask extends SinkTask {
         return offsets;
     }
 
+    public boolean isSchemaless(Record record) {
+        return record.getSchemaType().equals(SchemaType.SCHEMA_LESS);
+    }
+
     @Override
     public void put(Collection<SinkRecord> records) {
         log.info("###: {}", records);
@@ -89,6 +97,20 @@ public class DatabendSinkTask extends SinkTask {
                         + "database...",
                 recordsCount, first.topic(), first.kafkaPartition(), first.kafkaOffset()
         );
+
+        // isSchemaless
+        if (isSchemaless(Record.convert(first))) {
+            try {
+                log.info("Writing {} schemaless records", records.size());
+                writer.writeSchemaLessData(records.stream().map(Record::convert).collect(Collectors.toList()));
+            } catch (SQLException | TableAlterOrCreateException e) {
+                log.error("Error while writing records to Databend", e);
+                throw new ConnectException(e);
+            }
+            log.info("Successfully wrote {} schemaless records", records.size());
+            return;
+        }
+
         try {
             log.info("Writing {} records", records.size());
             writer.write(records);
