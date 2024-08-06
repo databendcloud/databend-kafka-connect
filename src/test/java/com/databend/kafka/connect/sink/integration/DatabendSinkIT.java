@@ -75,7 +75,7 @@ public class DatabendSinkIT extends BaseConnectorIT {
 
     @After
     public void tearDown() throws SQLException {
-        connection.close();
+//        connection.close();
         stopConnect();
     }
 
