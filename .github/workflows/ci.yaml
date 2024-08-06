@@ -29,7 +29,7 @@ jobs:
           maven-version: 3.8.2
 
       - name: Maven Build
-        run:  mvn -passembly -Dmaven.test.skip package
+        run:  mvn -Passembly -Dmaven.test.skip package
 
       - name: Databend Kafka Integration test
         run:  mvn test -D test=DatabendSinkIT
