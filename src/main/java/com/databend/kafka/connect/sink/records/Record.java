@@ -6,19 +6,17 @@ import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.data.Struct;
 import org.apache.kafka.connect.errors.DataException;
 import org.apache.kafka.connect.sink.SinkRecord;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
 
 public class Record {
-    private OffsetContainer recordOffsetContainer = null;
+    private OffsetContainer recordOffsetContainer;
     private Object value;
-    private Map<String, Data> jsonMap = null;
-    private List<Field> fields = null;
+    private Map<String, Data> jsonMap;
+    private List<Field> fields;
     private SchemaType schemaType;
-    private SinkRecord sinkRecord = null;
+    private SinkRecord sinkRecord;
 
     public Record(SchemaType schemaType, OffsetContainer recordOffsetContainer, List<Field> fields, Map<String, Data> jsonMap, SinkRecord sinkRecord) {
         this.recordOffsetContainer = recordOffsetContainer;
