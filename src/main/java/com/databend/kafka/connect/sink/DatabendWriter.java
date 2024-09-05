@@ -3,16 +3,25 @@ package com.databend.kafka.connect.sink;
 import com.databend.kafka.connect.databendclient.CachedConnectionProvider;
 import com.databend.kafka.connect.databendclient.DatabendConnection;
 import com.databend.kafka.connect.databendclient.TableIdentity;
+import com.databend.kafka.connect.sink.records.Data;
+import com.databend.kafka.connect.sink.records.Record;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.sink.SinkRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class DatabendWriter {
     private static final Logger log = LoggerFactory.getLogger(DatabendWriter.class);
@@ -43,11 +52,101 @@ public class DatabendWriter {
         };
     }
 
+    public void writeSchemaLessData(final Collection<Record> records) throws SQLException, TableAlterOrCreateException {
+        final com.databend.jdbc.DatabendConnection connection = (com.databend.jdbc.DatabendConnection) cachedConnectionProvider.getConnection();
+        log.info("DatabendWriter Writing {} records", records.size());
+        // new ObjectMapper
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        StringBuilder sb = new StringBuilder();
+        try {
+            TableIdentity tableId = null;
+            for (Record record : records) {
+                tableId = destinationTable(record.getTopic());
+                Map<String, Data> recordMap = record.getJsonMap();
+
+                // 创建一个新的 Map 来存储转换后的数据
+                Map<String, Object> transformedMap = new HashMap<>();
+
+                for (Map.Entry<String, Data> entry : recordMap.entrySet()) {
+                    String key = entry.getKey();
+                    Data data = entry.getValue();
+
+                    // Check the field type and handle the object accordingly
+                    Object value;
+                    switch (data.getFieldType()) {
+                        case INT8:
+                        case INT16:
+                        case INT32:
+                        case INT64:
+                            log.info("DatabendWriter Writing record int data");
+                            value = Integer.parseInt(data.getObject().toString());
+                            break;
+                        case FLOAT32:
+                        case FLOAT64:
+                            value = Double.parseDouble(data.getObject().toString());
+                            break;
+                        case BOOLEAN:
+                            value = Boolean.parseBoolean(data.getObject().toString());
+                            break;
+                        case STRING:
+                            log.info("DatabendWriter Writing record string data");
+                            value = data.getObject().toString();
+                            break;
+                        default:
+                            log.info("DatabendWriter Writing record string data");
+                            value = data.getObject().toString();
+                            break;
+                    }
+
+                    // Add the processed value to the map
+                    transformedMap.put(key, value);
+                }
+                log.info("DatabendWriter Writing transformedMap is: {}", transformedMap);
+
+                String json = objectMapper.writeValueAsString(transformedMap);
+                sb.append(json).append("\n");
+            }
+            String jsonStr = sb.toString();
+//            log.info("DatabendWriter Writing jsonStr is: {}", jsonStr);
+            String uuid = UUID.randomUUID().toString();
+            String stagePrefix = String.format("%s/%s/%s/%s/%s/%s/%s/",
+                    LocalDateTime.now().getYear(),
+                    LocalDateTime.now().getMonthValue(),
+                    LocalDateTime.now().getDayOfMonth(),
+                    LocalDateTime.now().getHour(),
+                    LocalDateTime.now().getMinute(),
+                    LocalDateTime.now().getSecond(),
+                    uuid);
+            InputStream inputStream = new ByteArrayInputStream(jsonStr.getBytes(StandardCharsets.UTF_8));
+            String fileName = String.format("%s.%s", uuid, "ndjson");
+            connection.uploadStream("~", stagePrefix, inputStream, fileName, jsonStr.length(), false);
+            assert tableId != null;
+            String copyIntoSQL = String.format(
+                    "COPY INTO %s FROM %s FILE_FORMAT = (type = NDJSON missing_field_as = FIELD_DEFAULT COMPRESSION = AUTO) " +
+                            "PURGE = %b FORCE = %b DISABLE_VARIANT_CHECK = %b",
+                    tableId,
+                    String.format("@~/%s/%s", stagePrefix, fileName),
+                    true,
+                    true,
+                    true
+            );
+            try {
+                connection.createStatement().execute(copyIntoSQL);
+            } catch (Exception e) {
+                log.error("DatabendWriter writeSchemaLessData error: {}", e);
+            }
+        } catch (TableAlterOrCreateException e) {
+            throw e;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     void write(final Collection<SinkRecord> records)
             throws SQLException, TableAlterOrCreateException {
         final Connection connection = cachedConnectionProvider.getConnection();
         log.info("DatabendWriter Writing {} records", records.size());
-        log.info("DatabendWriter Writing records is: {}", records);
         try {
             final Map<TableIdentity, BufferedRecords> bufferByTable = new HashMap<>();
             for (SinkRecord record : records) {
@@ -56,7 +155,6 @@ public class DatabendWriter {
                     log.info("DatabendWriter Writing record valueSchema is: {}", record.valueSchema().fields());
                 }
                 log.info("DatabendWriter Writing record key is: {}", record.key());
-                log.info("DatabendWriter Writing record value is: {}", record.value());
                 log.info("DatabendWriter Writing record topic is: {}", record.topic());
                 log.info("DatabendWriter Writing record timestamp is: {}", record.timestamp());
                 final TableIdentity tableId = destinationTable(record.topic());

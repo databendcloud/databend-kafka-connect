@@ -58,11 +58,11 @@ public class DatabendSinkIT extends BaseConnectorIT {
                 "databend");
 
         try (Statement s = connection.createStatement()) {
-            s.execute("DROP TABLE measurements;");
+            s.execute("DROP TABLE if exists measurements;");
         }
 
         try (Statement s = connection.createStatement()) {
-            s.execute("CREATE TABLE " + MEASUREMENTS + " ("
+            s.execute("CREATE TABLE if not exists " + MEASUREMENTS + " ("
                     + "    key             int not null,"
                     + "    city_id         int not null,"
                     + "    logdate         date not null,"
@@ -75,7 +75,7 @@ public class DatabendSinkIT extends BaseConnectorIT {
 
     @After
     public void tearDown() throws SQLException {
-        connection.close();
+//        connection.close();
         stopConnect();
     }
 
