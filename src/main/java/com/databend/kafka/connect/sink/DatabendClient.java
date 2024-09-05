@@ -439,7 +439,7 @@ public class DatabendClient implements DatabendConnection {
         String[] tableTypes = tableTypes(metadata, this.tableTypes);
         String tableTypeDisplay = displayableTableTypes(tableTypes, "/");
         glog.info("Checking {} dialect for existence of {} {}", this, tableTypeDisplay, tableId);
-        glog.info("catalogName is {}, schemaName is {}, tableName is {}", tableId.catalogName(),tableId.schemaName(), tableId.tableName());
+        glog.info("catalogName is {}, schemaName is {}, tableName is {}", tableId.catalogName(), tableId.schemaName(), tableId.tableName());
         try (ResultSet rs = connection.getMetaData().getTables(
                 tableId.catalogName(),
                 tableId.schemaName(),
@@ -1622,15 +1622,17 @@ public class DatabendClient implements DatabendConnection {
             case INT64:
                 return "BIGINT";
             case FLOAT32:
-                return "REAL";
+                return "FLOAT";
             case FLOAT64:
-                return "DOUBLE PRECISION";
+                return "DOUBLE";
             case BOOLEAN:
                 return "BOOLEAN";
             case STRING:
-                return "TEXT";
-            case BYTES:
-                return "BYTEA";
+                return "STRING";
+            case MAP:
+                return "STRING";
+            case STRUCT:
+                return "VARIANT";
             case ARRAY:
                 SinkRecordField childField = new SinkRecordField(
                         field.schema().valueSchema(),
