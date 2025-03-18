@@ -64,14 +64,14 @@ public class DatabendWriter {
                 tableId = destinationTable(record.getTopic());
                 Map<String, Data> recordMap = record.getJsonMap();
 
-                // 创建一个新的 Map 来存储转换后的数据
+                // create a new map to store the transformed data
                 Map<String, Object> transformedMap = new HashMap<>();
 
                 for (Map.Entry<String, Data> entry : recordMap.entrySet()) {
                     String key = entry.getKey();
                     Data data = entry.getValue();
 
-                    // 处理数据类型
+                    // Check the field type and handle the object accordingly
                     Object value;
                     switch (data.getFieldType()) {
                         case INT8:
@@ -95,7 +95,7 @@ public class DatabendWriter {
                             break;
                     }
 
-                    // 添加处理后的值到映射
+                    // Add the processed value to the map
                     transformedMap.put(key, value);
                 }
                 log.info("DatabendWriter Writing transformedMap is: {}", transformedMap);
@@ -104,7 +104,7 @@ public class DatabendWriter {
                 sb.append(json).append("\n");
             }
 
-            // 如果没有记录，提前返回
+            // if there are no records to write, return
             if (sb.length() == 0) {
                 log.info("No records to write");
                 return;
@@ -112,7 +112,7 @@ public class DatabendWriter {
 
             String jsonStr = sb.toString();
 
-            // 创建UUID和路径
+            // create uuid for the stage path
             String uuid = UUID.randomUUID().toString();
             String stagePath = String.format("%s/%s/%s/%s/%s/%s/%s",
                     LocalDateTime.now().getYear(),
@@ -155,7 +155,7 @@ public class DatabendWriter {
                 log.info("COPY INTO completed successfully");
             } catch (Exception e) {
                 log.error("DatabendWriter writeSchemaLessData error: {}", e);
-                throw e; // 重新抛出异常以便更好地处理错误
+                throw e; // throw the exception to the caller
             }
         } catch (TableAlterOrCreateException e) {
             throw e;
