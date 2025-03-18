@@ -55,7 +55,6 @@ public class DatabendWriter {
     public void writeSchemaLessData(final Collection<Record> records) throws SQLException, TableAlterOrCreateException {
         final com.databend.jdbc.DatabendConnection connection = (com.databend.jdbc.DatabendConnection) cachedConnectionProvider.getConnection();
         log.info("DatabendWriter Writing {} records", records.size());
-        // new ObjectMapper
         ObjectMapper objectMapper = new ObjectMapper();
 
         StringBuilder sb = new StringBuilder();
@@ -72,14 +71,13 @@ public class DatabendWriter {
                     String key = entry.getKey();
                     Data data = entry.getValue();
 
-                    // Check the field type and handle the object accordingly
+                    // 处理数据类型
                     Object value;
                     switch (data.getFieldType()) {
                         case INT8:
                         case INT16:
                         case INT32:
                         case INT64:
-                            log.info("DatabendWriter Writing record int data");
                             value = Integer.parseInt(data.getObject().toString());
                             break;
                         case FLOAT32:
@@ -90,16 +88,14 @@ public class DatabendWriter {
                             value = Boolean.parseBoolean(data.getObject().toString());
                             break;
                         case STRING:
-                            log.info("DatabendWriter Writing record string data");
                             value = data.getObject().toString();
                             break;
                         default:
-                            log.info("DatabendWriter Writing record string data");
                             value = data.getObject().toString();
                             break;
                     }
 
-                    // Add the processed value to the map
+                    // 添加处理后的值到映射
                     transformedMap.put(key, value);
                 }
                 log.info("DatabendWriter Writing transformedMap is: {}", transformedMap);
@@ -107,10 +103,18 @@ public class DatabendWriter {
                 String json = objectMapper.writeValueAsString(transformedMap);
                 sb.append(json).append("\n");
             }
+
+            // 如果没有记录，提前返回
+            if (sb.length() == 0) {
+                log.info("No records to write");
+                return;
+            }
+
             String jsonStr = sb.toString();
-//            log.info("DatabendWriter Writing jsonStr is: {}", jsonStr);
+
+            // 创建UUID和路径
             String uuid = UUID.randomUUID().toString();
-            String stagePrefix = String.format("%s/%s/%s/%s/%s/%s/%s/",
+            String stagePath = String.format("%s/%s/%s/%s/%s/%s/%s",
                     LocalDateTime.now().getYear(),
                     LocalDateTime.now().getMonthValue(),
                     LocalDateTime.now().getDayOfMonth(),
@@ -118,23 +122,40 @@ public class DatabendWriter {
                     LocalDateTime.now().getMinute(),
                     LocalDateTime.now().getSecond(),
                     uuid);
-            InputStream inputStream = new ByteArrayInputStream(jsonStr.getBytes(StandardCharsets.UTF_8));
-            String fileName = String.format("%s.%s", uuid, "ndjson");
-            connection.uploadStream("~", stagePrefix, inputStream, fileName, jsonStr.length(), false);
+
+            String fileName = String.format("%s.ndjson", uuid);
+
+            byte[] jsonBytes = jsonStr.getBytes(StandardCharsets.UTF_8);
+            InputStream inputStream = new ByteArrayInputStream(jsonBytes);
+            int contentLength = jsonBytes.length;
+
+            log.info("Uploading data, file size: {} bytes", contentLength);
+
+            connection.uploadStream("~", stagePath, inputStream, fileName, contentLength, false);
+
             assert tableId != null;
+
+            String stagePlusFileName = String.format("@~/%s/%s", stagePath, fileName);
+
+            log.info("Copying data from stage: {}", stagePlusFileName);
+
             String copyIntoSQL = String.format(
                     "COPY INTO %s FROM %s FILE_FORMAT = (type = NDJSON missing_field_as = FIELD_DEFAULT COMPRESSION = AUTO) " +
                             "PURGE = %b FORCE = %b DISABLE_VARIANT_CHECK = %b",
                     tableId,
-                    String.format("@~/%s/%s", stagePrefix, fileName),
+                    stagePlusFileName,
                     true,
                     true,
                     true
             );
+
             try {
+                log.info("Executing COPY INTO SQL: {}", copyIntoSQL);
                 connection.createStatement().execute(copyIntoSQL);
+                log.info("COPY INTO completed successfully");
             } catch (Exception e) {
                 log.error("DatabendWriter writeSchemaLessData error: {}", e);
+                throw e; // 重新抛出异常以便更好地处理错误
             }
         } catch (TableAlterOrCreateException e) {
             throw e;
