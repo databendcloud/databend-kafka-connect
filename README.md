@@ -1,7 +1,7 @@
 # Databend Kafka Connect Sink
 
 ## About
-databend-kafka-connect is the official Kafka Connect sink connector for [Databend](https://databend.rs/).
+databend-kafka-connect is the official Kafka Connect sink connector for [Databend](https://databend.com/).
 The Kafka connector delivers data from a Kafka topic to a Databend table.
 The detail introduction docs available in [docs page](./docs/docs.md)
 
